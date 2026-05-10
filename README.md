@@ -1,4 +1,12 @@
-# gstack
+# gstack (Thanx fork)
+
+> **Thanx-maintained fork of [garrytan/gstack](https://github.com/garrytan/gstack).**
+> We pin to a known-reviewed snapshot rather than tracking upstream automatically.
+> Every change pulled from upstream goes through `/upstream-sync`, which performs
+> an explicit, file-by-file security review before any merge. Auto-update is
+> disabled. Install from `git@github.com:thanx-ai/gstack.git` — never paste an
+> install snippet that clones from the upstream repo. See **Maintaining this fork**
+> below for the sync workflow and the supply-chain rationale.
 
 > "I don't think I've typed like a line of code probably since December, basically, which is an extremely large change." — [Andrej Karpathy](https://fortune.com/2026/03/21/andrej-karpathy-openai-cofounder-ai-agents-coding-state-of-psychosis-openclaw/), No Priors podcast, March 2026
 
@@ -40,34 +48,39 @@ Fork it. Improve it. Make it yours. And if you want to hate on free open source 
 5. Run `/qa` on your staging URL
 6. Stop there. You'll know if this is for you.
 
-## Install — 30 seconds
+## Install (Thanx fork) — 30 seconds
 
 **Requirements:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Git](https://git-scm.com/), [Bun](https://bun.sh/) v1.0+, [Node.js](https://nodejs.org/) (Windows only)
 
-### Step 1: Install on your machine
+### Install from the Thanx fork
 
-Open Claude Code and paste this. Claude does the rest.
+Clone from `thanx-ai/gstack` (NOT `garrytan/gstack` — see "Maintaining this fork" for why). Open Claude Code and paste:
 
-> Install gstack: run **`git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup`** then add a "gstack" section to CLAUDE.md that says to use the /browse skill from gstack for all web browsing, never use mcp\_\_claude-in-chrome\_\_\* tools, and lists the available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /setup-gbrain, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn. Then ask the user if they also want to add gstack to the current project so teammates get it.
+> Install gstack from the Thanx fork: run **`git clone --single-branch --depth 1 git@github.com:thanx-ai/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup`** then add a "gstack" section to CLAUDE.md that says to use the /browse skill from gstack for all web browsing, never use mcp\_\_claude-in-chrome\_\_\* tools, and lists the available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /setup-gbrain, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /upstream-sync, /learn.
 
-### Step 2: Team mode — auto-update for shared repos (recommended)
+### Updating
 
-From inside your repo, paste this. Switches you to team mode, bootstraps the repo so teammates get gstack automatically, and commits the change:
+Auto-update is disabled in this fork by design — there is no SessionStart hook,
+no remote VERSION poll, and no inline `UPGRADE_AVAILABLE` flow. Update on your
+own schedule:
 
-```bash
-(cd ~/.claude/skills/gstack && ./setup --team) && ~/.claude/skills/gstack/bin/gstack-team-init required && git add .claude/ CLAUDE.md && git commit -m "require gstack for AI-assisted work"
-```
+- **`/gstack-upgrade`** — `git pull origin main` from `thanx-ai/gstack` and
+  re-run `./setup`. This is internal to Thanx and reviewed when each fork
+  release lands.
+- **`/upstream-sync`** — fetch and merge changes from upstream
+  `garrytan/gstack`. Performs an explicit, file-by-file security review of
+  every commit before any merge happens. See "Maintaining this fork" below.
 
-No vendored files in your repo, no version drift, no manual upgrades. Every Claude Code session starts with a fast auto-update check (throttled to once/hour, network-failure-safe, completely silent).
-
-Swap `required` for `optional` if you'd rather nudge teammates than block them.
+There is no `--team` mode in this fork. The previous team-mode behaviour silently
+ran `git pull` from upstream on every Claude Code session, which is exactly the
+supply-chain risk this fork is designed to eliminate.
 
 ### OpenClaw
 
 OpenClaw spawns Claude Code sessions via ACP, so every gstack skill just works
 when Claude Code has gstack installed. Paste this to your OpenClaw agent:
 
-> Install gstack: run `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` to install gstack for Claude Code. Then add a "Coding Tasks" section to AGENTS.md that says: when spawning Claude Code sessions for coding work, tell the session to use gstack skills. Include these examples — security audit: "Load gstack. Run /cso", code review: "Load gstack. Run /review", QA test a URL: "Load gstack. Run /qa https://...", build a feature end-to-end: "Load gstack. Run /autoplan, implement the plan, then run /ship", plan before building: "Load gstack. Run /office-hours then /autoplan. Save the plan, don't implement."
+> Install gstack from the Thanx fork: run `git clone --single-branch --depth 1 git@github.com:thanx-ai/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` to install gstack for Claude Code. Then add a "Coding Tasks" section to AGENTS.md that says: when spawning Claude Code sessions for coding work, tell the session to use gstack skills. Include these examples — security audit: "Load gstack. Run /cso", code review: "Load gstack. Run /review", QA test a URL: "Load gstack. Run /qa https://...", build a feature end-to-end: "Load gstack. Run /autoplan, implement the plan, then run /ship", plan before building: "Load gstack. Run /office-hours then /autoplan. Save the plan, don't implement."
 
 **After setup, just talk to your OpenClaw agent naturally:**
 
@@ -105,7 +118,7 @@ gstack works on 10 AI coding agents, not just Claude. Setup auto-detects which
 agents you have installed:
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/gstack
+git clone --single-branch --depth 1 git@github.com:thanx-ai/gstack.git ~/gstack
 cd ~/gstack && ./setup
 ```
 
@@ -227,7 +240,8 @@ Each skill feeds into the next. `/office-hours` writes a design doc that `/plan-
 | `/setup-deploy` | **Deploy Configurator** — one-time setup for `/land-and-deploy`. Detects your platform, production URL, and deploy commands. |
 | `/setup-gbrain` | **GBrain Onboarding** — from zero to running gbrain in under 5 minutes. PGLite local, Supabase existing URL, or auto-provision a new Supabase project via Management API. MCP registration for Claude Code + per-repo trust triad (read-write/read-only/deny). [Full guide](USING_GBRAIN_WITH_GSTACK.md). |
 | `/sync-gbrain` | **Keep Brain Current** — re-index this repo's code into gbrain via `gbrain sources add` + `gbrain sync --strategy code`, refresh the `## GBrain Search Guidance` block in CLAUDE.md, and auto-remove guidance when the capability check fails. `--incremental` (default), `--full`, `--dry-run`. Idempotent; safe to re-run. |
-| `/gstack-upgrade` | **Self-Updater** — upgrade gstack to latest. Detects global vs vendored install, syncs both, shows what changed. |
+| `/gstack-upgrade` | **Self-Updater** — pull the latest reviewed fork release from `thanx-ai/gstack` (the Thanx remote). Detects global vs vendored install, syncs both, shows what changed. No remote VERSION poll, no auto-upgrade. |
+| `/upstream-sync` | **Upstream Sync (Thanx fork)** — pull changes from upstream `garrytan/gstack` with an explicit, file-by-file security review of every commit. Refuses to merge without your sign-off. Logs the sync to `UPSTREAM_SYNC_LOG.md`. |
 
 ### New binaries (v0.19)
 
@@ -448,7 +462,7 @@ Data is stored in [Supabase](https://supabase.com) (open source Firebase alterna
 
 **`/browse` fails?** `cd ~/.claude/skills/gstack && bun install && bun run build`
 
-**Stale install?** Run `/gstack-upgrade` — or set `auto_upgrade: true` in `~/.gstack/config.yaml`
+**Stale install?** Run `/gstack-upgrade` to pull the latest from `thanx-ai/gstack`. Run `/upstream-sync` if you want to review and merge new changes from upstream `garrytan/gstack`. Auto-update is intentionally disabled in this fork — see "Maintaining this fork".
 
 **Want shorter commands?** `cd ~/.claude/skills/gstack && ./setup --no-prefix` — switches from `/gstack-qa` to `/qa`. Your choice is remembered for future upgrades.
 
@@ -467,9 +481,83 @@ Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-desig
 /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy,
 /canary, /benchmark, /browse, /open-gstack-browser, /qa, /qa-only, /design-review,
 /setup-browser-cookies, /setup-deploy, /setup-gbrain, /sync-gbrain, /retro, /investigate, /document-release,
-/codex, /cso, /autoplan, /pair-agent, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
+/codex, /cso, /autoplan, /pair-agent, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /upstream-sync, /learn.
 ```
+
+## Maintaining this fork
+
+This fork exists to give Thanx a controlled, reviewed snapshot of upstream
+`garrytan/gstack`. The upstream repo moves fast and is community-driven, which
+is great for upstream but means any session that auto-updates from it is
+trusting whatever shipped in the last 24 hours. We don't trust that for a tool
+that ships agents with Bash, file write, and MCP server registration access.
+
+**The threat we're defending against** is supply-chain compromise: an
+attacker (or an unreviewed community PR) lands code in upstream that runs on
+every Claude Code SessionStart hook, registers a malicious MCP server, exfils
+shell history through telemetry, or rewrites a hook to phone home. Pinning to a
+reviewed snapshot lets us audit what we're running.
+
+### What we removed from upstream
+
+- **SessionStart auto-update hook.** `bin/gstack-session-update` and the
+  `setup --team` flag that registered it are no-ops. Sessions never silently
+  `git pull`.
+- **Inline upgrade flow.** Skill preambles no longer call
+  `gstack-update-check`, so no skill invocation reaches out to
+  `raw.githubusercontent.com/garrytan/gstack/main/VERSION`. The
+  `UPGRADE_AVAILABLE` / "auto-upgrade if configured" path is gone.
+- **`auto_upgrade` config knob.** Setting it to `true` no longer does anything.
+
+### How to pull from upstream safely
+
+Run `/upstream-sync`. It walks through:
+
+1. Adding `garrytan/gstack` as the `upstream` remote (read-only — no push).
+2. Fetching upstream and listing every commit since the last sync.
+3. Reviewing each commit's diff explicitly, with extra scrutiny for:
+   - Anything in `bin/`, `scripts/`, `setup`, or other executable shell.
+   - New `curl` / `wget` / `fetch` calls, especially to non-Anthropic /
+     non-Thanx URLs.
+   - New environment variables, especially anything that reads tokens or auth.
+   - SessionStart / PreToolUse / PostToolUse hook registrations.
+   - MCP server registrations (`claude mcp add ...`).
+   - `eval` / `source` of remotely-fetched content (`bash <(curl …)`,
+     `eval "$(...)"`).
+   - File writes outside the repo working tree.
+   - New dependencies in `package.json` (each one is a transitive trust call).
+   - GitHub Actions workflow changes (CI runs with secrets).
+   - Any change to telemetry endpoints or payload shape.
+4. Asking explicitly before merging — no auto-merge, ever.
+5. Re-running the full test suite (`bun test`) and the security checks before
+   pushing the merge to `thanx-ai/gstack`.
+6. Logging the sync (commits reviewed, what was approved, what was rejected,
+   reviewer) to `UPSTREAM_SYNC_LOG.md`.
+
+If anything in the diff looks load-bearing for a supply-chain attack — even if
+it's "probably fine" — push back, ask for a second pair of eyes, and document
+it in the sync log. Defaulting to "merge it" is exactly the failure mode this
+fork prevents.
+
+### When NOT to pull from upstream
+
+- During an active incident in the broader Claude Code / npm / Anthropic
+  ecosystem.
+- When upstream is in the middle of a refactor that touches `setup`, `bin/`,
+  or hooks (wait until it stabilises and a maintainer has reviewed it).
+- When you don't have time to actually read every diff. The point of this
+  fork is the review — running `/upstream-sync` and rubber-stamping it is
+  worse than not running it at all.
+
+### Releasing a new fork version
+
+Within Thanx: bump `VERSION`, write a `CHANGELOG.md` entry summarising what
+changed since the last fork release (including any upstream commits that were
+merged in), open a PR to `thanx-ai/gstack`, get human review, merge. Other
+team members get the new version when they next run `/gstack-upgrade`.
 
 ## License
 
-MIT. Free forever. Go build something.
+MIT. Free forever. Go build something. Upstream credit to
+[garrytan/gstack](https://github.com/garrytan/gstack); this fork is maintained
+by Thanx and adds the supply-chain hardening described above.
