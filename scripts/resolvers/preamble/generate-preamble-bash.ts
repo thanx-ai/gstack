@@ -16,8 +16,9 @@ GSTACK_DESIGN="$GSTACK_ROOT/design/dist"
   return `## Preamble (run first)
 
 \`\`\`bash
-${runtimeRoot}_UPD=$(${ctx.paths.binDir}/gstack-update-check 2>/dev/null || ${ctx.paths.localSkillRoot}/bin/gstack-update-check 2>/dev/null || true)
-[ -n "$_UPD" ] && echo "$_UPD" || true
+${runtimeRoot}# Thanx fork: no remote VERSION poll. Updates land via /gstack-upgrade
+# (from thanx-ai/gstack) or /upstream-sync (security-reviewed merge from
+# upstream garrytan/gstack). Never reach out to a non-Thanx URL here.
 mkdir -p ~/.gstack/sessions
 touch ~/.gstack/sessions/"$PPID"
 _SESSIONS=$(find ~/.gstack/sessions -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')

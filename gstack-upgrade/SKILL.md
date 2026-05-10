@@ -1,10 +1,12 @@
 ---
 name: gstack-upgrade
-version: 1.1.0
+version: 2.0.0
 description: |
-  Upgrade gstack to the latest version. Detects global vs vendored install,
-  runs the upgrade, and shows what's new. Use when asked to "upgrade gstack",
-  "update gstack", or "get latest version".
+  Pull the latest reviewed gstack release from origin (thanx-ai/gstack) and
+  re-run setup. This is the Thanx fork: there is no remote VERSION poll, no
+  auto-upgrade, no SessionStart hook. To merge changes from upstream
+  garrytan/gstack, use /upstream-sync instead — it does an explicit
+  file-by-file security review.
   Voice triggers (speech-to-text aliases): "upgrade the tools", "update the tools", "gee stack upgrade", "g stack upgrade".
 triggers:
   - upgrade gstack
@@ -21,64 +23,16 @@ allowed-tools:
 
 # /gstack-upgrade
 
-Upgrade gstack to the latest version and show what's new.
+Pull the latest reviewed fork release from `thanx-ai/gstack` (the Thanx fork's
+`origin`). For pulling from upstream `garrytan/gstack`, use `/upstream-sync`
+instead — that skill does a file-by-file security review and is the only
+sanctioned path for upstream merges.
 
-## Inline upgrade flow
+This skill never reaches `garrytan/gstack` directly. If origin is somehow
+pointing at upstream, stop and tell the user — this fork's whole point is
+that origin is `thanx-ai/gstack`.
 
-This section is referenced by all skill preambles when they detect `UPGRADE_AVAILABLE`.
-
-### Step 1: Ask the user (or auto-upgrade)
-
-First, check if auto-upgrade is enabled:
-```bash
-_AUTO=""
-[ "${GSTACK_AUTO_UPGRADE:-}" = "1" ] && _AUTO="true"
-[ -z "$_AUTO" ] && _AUTO=$(~/.claude/skills/gstack/bin/gstack-config get auto_upgrade 2>/dev/null || true)
-echo "AUTO_UPGRADE=$_AUTO"
-```
-
-**If `AUTO_UPGRADE=true` or `AUTO_UPGRADE=1`:** Skip AskUserQuestion. Log "Auto-upgrading gstack v{old} → v{new}..." and proceed directly to Step 2. If `./setup` fails during auto-upgrade, restore from backup (`.bak` directory) and warn the user: "Auto-upgrade failed — restored previous version. Run `/gstack-upgrade` manually to retry."
-
-**Otherwise**, use AskUserQuestion:
-- Question: "gstack **v{new}** is available (you're on v{old}). Upgrade now?"
-- Options: ["Yes, upgrade now", "Always keep me up to date", "Not now", "Never ask again"]
-
-**If "Yes, upgrade now":** Proceed to Step 2.
-
-**If "Always keep me up to date":**
-```bash
-~/.claude/skills/gstack/bin/gstack-config set auto_upgrade true
-```
-Tell user: "Auto-upgrade enabled. Future updates will install automatically." Then proceed to Step 2.
-
-**If "Not now":** Write snooze state with escalating backoff (first snooze = 24h, second = 48h, third+ = 1 week), then continue with the current skill. Do not mention the upgrade again.
-```bash
-_SNOOZE_FILE="$HOME/.gstack/update-snoozed"
-_REMOTE_VER="{new}"
-_CUR_LEVEL=0
-if [ -f "$_SNOOZE_FILE" ]; then
-  _SNOOZED_VER=$(awk '{print $1}' "$_SNOOZE_FILE")
-  if [ "$_SNOOZED_VER" = "$_REMOTE_VER" ]; then
-    _CUR_LEVEL=$(awk '{print $2}' "$_SNOOZE_FILE")
-    case "$_CUR_LEVEL" in *[!0-9]*) _CUR_LEVEL=0 ;; esac
-  fi
-fi
-_NEW_LEVEL=$((_CUR_LEVEL + 1))
-[ "$_NEW_LEVEL" -gt 3 ] && _NEW_LEVEL=3
-echo "$_REMOTE_VER $_NEW_LEVEL $(date +%s)" > "$_SNOOZE_FILE"
-```
-Note: `{new}` is the remote version from the `UPGRADE_AVAILABLE` output — substitute it from the update check result.
-
-Tell user the snooze duration: "Next reminder in 24h" (or 48h or 1 week, depending on level). Tip: "Set `auto_upgrade: true` in `~/.gstack/config.yaml` for automatic upgrades."
-
-**If "Never ask again":**
-```bash
-~/.claude/skills/gstack/bin/gstack-config set update_check false
-```
-Tell user: "Update checks disabled. Run `~/.claude/skills/gstack/bin/gstack-config set update_check true` to re-enable."
-Continue with the current skill.
-
-### Step 2: Detect install type
+## Step 1: Detect install type
 
 ```bash
 if [ -d "$HOME/.claude/skills/gstack/.git" ]; then
@@ -106,21 +60,35 @@ fi
 echo "Install type: $INSTALL_TYPE at $INSTALL_DIR"
 ```
 
-The install type and directory path printed above will be used in all subsequent steps.
+## Step 2: Verify origin points at the Thanx fork
 
-### Step 3: Save old version
+```bash
+cd "$INSTALL_DIR"
+ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+echo "ORIGIN: $ORIGIN_URL"
+```
 
-Use the install directory from Step 2's output below:
+The URL must match `thanx-ai/gstack` (either `git@github.com:thanx-ai/gstack.git`
+or `https://github.com/thanx-ai/gstack.git`). If it points at `garrytan/gstack`
+or any other repo, **stop**. Tell the user the origin remote is wrong for this
+fork and suggest:
+
+```bash
+git -C "$INSTALL_DIR" remote set-url origin git@github.com:thanx-ai/gstack.git
+```
+
+Do not proceed with a `git pull` until origin is correct.
+
+## Step 3: Save old version
 
 ```bash
 OLD_VERSION=$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown")
 ```
 
-### Step 4: Upgrade
+## Step 4: Pull and re-run setup
 
-Use the install type and directory detected in Step 2:
+For git installs (global-git, local-git):
 
-**For git installs** (global-git, local-git):
 ```bash
 cd "$INSTALL_DIR"
 STASH_OUTPUT=$(git stash 2>&1)
@@ -128,81 +96,31 @@ git fetch origin
 git reset --hard origin/main
 ./setup
 ```
-If `$STASH_OUTPUT` contains "Saved working directory", warn the user: "Note: local changes were stashed. Run `git stash pop` in the skill directory to restore them."
 
-**For vendored installs** (vendored, vendored-global):
+If `$STASH_OUTPUT` contains "Saved working directory", warn the user:
+"Note: local changes were stashed. Run `git stash pop` in the skill directory
+to restore them."
+
+For vendored installs (vendored, vendored-global) — re-clone from the Thanx
+fork:
+
 ```bash
 PARENT=$(dirname "$INSTALL_DIR")
 TMP_DIR=$(mktemp -d)
-git clone --depth 1 https://github.com/garrytan/gstack.git "$TMP_DIR/gstack"
+git clone --depth 1 git@github.com:thanx-ai/gstack.git "$TMP_DIR/gstack"
 mv "$INSTALL_DIR" "$INSTALL_DIR.bak"
 mv "$TMP_DIR/gstack" "$INSTALL_DIR"
 cd "$INSTALL_DIR" && ./setup
 rm -rf "$INSTALL_DIR.bak" "$TMP_DIR"
 ```
 
-### Step 4.5: Handle local vendored copy
-
-Use the install directory from Step 2. Check if there's also a local vendored copy, and whether team mode is active:
-
-```bash
-_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-LOCAL_GSTACK=""
-if [ -n "$_ROOT" ] && [ -d "$_ROOT/.claude/skills/gstack" ]; then
-  _RESOLVED_LOCAL=$(cd "$_ROOT/.claude/skills/gstack" && pwd -P)
-  _RESOLVED_PRIMARY=$(cd "$INSTALL_DIR" && pwd -P)
-  if [ "$_RESOLVED_LOCAL" != "$_RESOLVED_PRIMARY" ]; then
-    LOCAL_GSTACK="$_ROOT/.claude/skills/gstack"
-  fi
-fi
-_TEAM_MODE=$(~/.claude/skills/gstack/bin/gstack-config get team_mode 2>/dev/null || echo "false")
-echo "LOCAL_GSTACK=$LOCAL_GSTACK"
-echo "TEAM_MODE=$_TEAM_MODE"
-```
-
-**If `LOCAL_GSTACK` is non-empty AND `TEAM_MODE` is `true`:** Remove the vendored copy. Team mode uses the global install as the single source of truth.
-
-```bash
-cd "$_ROOT"
-git rm -r --cached .claude/skills/gstack/ 2>/dev/null || true
-if ! grep -qF '.claude/skills/gstack/' .gitignore 2>/dev/null; then
-  echo '.claude/skills/gstack/' >> .gitignore
-fi
-rm -rf "$LOCAL_GSTACK"
-```
-Tell user: "Removed vendored copy at `$LOCAL_GSTACK` (team mode active — global install is the source of truth). Commit the `.gitignore` change when ready."
-
-**If `LOCAL_GSTACK` is non-empty AND `TEAM_MODE` is NOT `true`:** Update it by copying from the freshly-upgraded primary install (same approach as README vendored install):
-```bash
-mv "$LOCAL_GSTACK" "$LOCAL_GSTACK.bak"
-cp -Rf "$INSTALL_DIR" "$LOCAL_GSTACK"
-rm -rf "$LOCAL_GSTACK/.git"
-cd "$LOCAL_GSTACK" && ./setup
-rm -rf "$LOCAL_GSTACK.bak"
-```
-Tell user: "Also updated vendored copy at `$LOCAL_GSTACK` — commit `.claude/skills/gstack/` when you're ready."
-
-If `./setup` fails, restore from backup and warn the user:
-```bash
-rm -rf "$LOCAL_GSTACK"
-mv "$LOCAL_GSTACK.bak" "$LOCAL_GSTACK"
-```
-Tell user: "Sync failed — restored previous version at `$LOCAL_GSTACK`. Run `/gstack-upgrade` manually to retry."
-
-### Step 4.75: Run version migrations
-
-After `./setup` completes, run any migration scripts for versions between the old
-and new version. Migrations handle state fixes that `./setup` alone can't cover
-(stale config, orphaned files, directory structure changes).
+## Step 5: Run version migrations
 
 ```bash
 MIGRATIONS_DIR="$INSTALL_DIR/gstack-upgrade/migrations"
 if [ -d "$MIGRATIONS_DIR" ]; then
   for migration in $(find "$MIGRATIONS_DIR" -maxdepth 1 -name 'v*.sh' -type f 2>/dev/null | sort -V); do
-    # Extract version from filename: v0.15.2.0.sh → 0.15.2.0
     m_ver="$(basename "$migration" .sh | sed 's/^v//')"
-    # Run if this migration version is newer than old version
-    # (simple string compare works for dotted versions with same segment count)
     if [ "$OLD_VERSION" != "unknown" ] && [ "$(printf '%s\n%s' "$OLD_VERSION" "$m_ver" | sort -V | head -1)" = "$OLD_VERSION" ] && [ "$OLD_VERSION" != "$m_ver" ]; then
       echo "Running migration $m_ver..."
       bash "$migration" || echo "  Warning: migration $m_ver had errors (non-fatal)"
@@ -211,69 +129,22 @@ if [ -d "$MIGRATIONS_DIR" ]; then
 fi
 ```
 
-Migrations are idempotent bash scripts in `gstack-upgrade/migrations/`. Each is named
-`v{VERSION}.sh` and runs only when upgrading from an older version. See CONTRIBUTING.md
-for how to add new migrations.
+## Step 6: Show what changed
 
-### Step 5: Write marker + clear cache
+Read `$INSTALL_DIR/CHANGELOG.md` and summarise the entries between
+`OLD_VERSION` and the new `VERSION` as 5–7 bullets. Skip purely internal
+refactors. Format:
 
-```bash
-mkdir -p ~/.gstack
-echo "$OLD_VERSION" > ~/.gstack/just-upgraded-from
-rm -f ~/.gstack/last-update-check
-rm -f ~/.gstack/update-snoozed
 ```
-
-### Step 6: Show What's New
-
-Read `$INSTALL_DIR/CHANGELOG.md`. Find all version entries between the old version and the new version. Summarize as 5-7 bullets grouped by theme. Don't overwhelm — focus on user-facing changes. Skip internal refactors unless they're significant.
-
-Format:
-```
-gstack v{new} — upgraded from v{old}!
+gstack v{new} — upgraded from v{old} (origin = thanx-ai/gstack).
 
 What's new:
-- [bullet 1]
-- [bullet 2]
 - ...
 
-Happy shipping!
+To merge changes from upstream garrytan/gstack, run /upstream-sync.
 ```
 
-### Step 7: Continue
+## Step 7: Continue
 
-After showing What's New, continue with whatever skill the user originally invoked. The upgrade is done — no further action needed.
-
----
-
-## Standalone usage
-
-When invoked directly as `/gstack-upgrade` (not from a preamble):
-
-1. Force a fresh update check (bypass cache):
-```bash
-~/.claude/skills/gstack/bin/gstack-update-check --force 2>/dev/null || \
-.claude/skills/gstack/bin/gstack-update-check --force 2>/dev/null || true
-```
-Use the output to determine if an upgrade is available.
-
-2. If `UPGRADE_AVAILABLE <old> <new>`: follow Steps 2-6 above.
-
-3. If no output (primary is up to date): check for a stale local vendored copy.
-
-Run the Step 2 bash block above to detect the primary install type and directory (`INSTALL_TYPE` and `INSTALL_DIR`). Then run the Step 4.5 detection bash block above to check for a local vendored copy (`LOCAL_GSTACK`) and team mode status (`TEAM_MODE`).
-
-**If `LOCAL_GSTACK` is empty** (no local vendored copy): tell the user "You're already on the latest version (v{version})."
-
-**If `LOCAL_GSTACK` is non-empty AND `TEAM_MODE` is `true`:** Remove the vendored copy using the Step 4.5 team-mode removal bash block above. Tell user: "Global v{version} is up to date. Removed stale vendored copy (team mode active). Commit the `.gitignore` change when ready."
-
-**If `LOCAL_GSTACK` is non-empty AND `TEAM_MODE` is NOT `true`**, compare versions:
-```bash
-PRIMARY_VER=$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown")
-LOCAL_VER=$(cat "$LOCAL_GSTACK/VERSION" 2>/dev/null || echo "unknown")
-echo "PRIMARY=$PRIMARY_VER LOCAL=$LOCAL_VER"
-```
-
-**If versions differ:** follow the Step 4.5 sync bash block above to update the local copy from the primary. Tell user: "Global v{PRIMARY_VER} is up to date. Updated local vendored copy from v{LOCAL_VER} → v{PRIMARY_VER}. Commit `.claude/skills/gstack/` when you're ready."
-
-**If versions match:** tell the user "You're on the latest version (v{PRIMARY_VER}). Global and local vendored copy are both up to date."
+The upgrade is done. Continue with whatever skill the user originally
+invoked, if anything.
