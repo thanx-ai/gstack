@@ -223,10 +223,15 @@ describe('Generated SKILL.md freshness', () => {
   });
 });
 
-// --- Update check preamble validation ---
+// --- No auto-update in generated SKILL.md files (Thanx fork) ---
+//
+// The Thanx fork removed the inline UPGRADE_AVAILABLE / auto-upgrade flow.
+// These tests guard against accidental reintroduction: no generated skill
+// should ever call gstack-update-check or emit the UPGRADE_AVAILABLE branch
+// into a model's context.
 
-describe('Update check preamble', () => {
-  const skillsWithUpdateCheck = [
+describe('No auto-update in generated SKILL.md (Thanx fork)', () => {
+  const generatedSkills = [
     'SKILL.md', 'browse/SKILL.md', 'qa/SKILL.md',
     'qa-only/SKILL.md',
     'setup-browser-cookies/SKILL.md',
@@ -245,38 +250,23 @@ describe('Update check preamble', () => {
     'cso/SKILL.md',
   ];
 
-  for (const skill of skillsWithUpdateCheck) {
-    test(`${skill} update check line ends with || true`, () => {
+  for (const skill of generatedSkills) {
+    test(`${skill} does not invoke gstack-update-check`, () => {
       const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
-      // The second line of the bash block must end with || true
-      // to avoid exit code 1 when _UPD is empty (up to date)
-      const match = content.match(/\[ -n "\$_UPD" \].*$/m);
-      expect(match).not.toBeNull();
-      expect(match![0]).toContain('|| true');
+      expect(content).not.toContain('gstack-update-check');
+    });
+
+    test(`${skill} does not reference the UPGRADE_AVAILABLE flow`, () => {
+      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
+      expect(content).not.toContain('UPGRADE_AVAILABLE');
+      expect(content).not.toContain('JUST_UPGRADED');
     });
   }
 
-  test('all skills with update check are generated from .tmpl', () => {
-    for (const skill of skillsWithUpdateCheck) {
-      const tmplPath = path.join(ROOT, skill + '.tmpl');
-      expect(fs.existsSync(tmplPath)).toBe(true);
+  test('all listed generated skills exist on disk', () => {
+    for (const skill of generatedSkills) {
+      expect(fs.existsSync(path.join(ROOT, skill))).toBe(true);
     }
-  });
-
-  test('update check bash block exits 0 when up to date', () => {
-    // Simulate the exact preamble command from SKILL.md
-    const result = Bun.spawnSync(['bash', '-c',
-      '_UPD=$(echo "" || true); [ -n "$_UPD" ] && echo "$_UPD" || true'
-    ], { stdout: 'pipe', stderr: 'pipe' });
-    expect(result.exitCode).toBe(0);
-  });
-
-  test('update check bash block exits 0 when upgrade available', () => {
-    const result = Bun.spawnSync(['bash', '-c',
-      '_UPD=$(echo "UPGRADE_AVAILABLE 0.3.3 0.4.0" || true); [ -n "$_UPD" ] && echo "$_UPD" || true'
-    ], { stdout: 'pipe', stderr: 'pipe' });
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout.toString().trim()).toBe('UPGRADE_AVAILABLE 0.3.3 0.4.0');
   });
 });
 

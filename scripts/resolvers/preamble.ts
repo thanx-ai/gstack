@@ -22,8 +22,10 @@ import { generateQuestionTuning } from './question-tuning';
 
 // Core bootstrap
 import { generatePreambleBash } from './preamble/generate-preamble-bash';
-// Thanx fork: generateUpgradeCheck removed — no inline UPGRADE_AVAILABLE flow.
-// Upstream merges go through /upstream-sync only.
+// Thanx fork: generateUpgradeCheck no longer emits the UPGRADE_AVAILABLE flow,
+// but still owns PROACTIVE / SKILL_PREFIX / feature-discovery prose. Upstream
+// merges go through /upstream-sync only.
+import { generateUpgradeCheck } from './preamble/generate-upgrade-check';
 import {
   generateCompletionStatus,
   generatePlanModeInfo,
@@ -90,6 +92,7 @@ export function generatePreamble(ctx: TemplateContext): string {
     // end-of-turn" rule before any other instruction. Renders for all skills
     // (not interactive-gated); the text applies universally.
     generatePlanModeInfo(ctx),
+    generateUpgradeCheck(ctx),
     generateWritingStyleMigration(ctx),
     generateLakeIntro(),
     generateTelemetryPrompt(ctx),

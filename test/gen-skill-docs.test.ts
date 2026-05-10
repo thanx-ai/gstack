@@ -1798,12 +1798,14 @@ describe('Codex generation (--host codex)', () => {
   });
 
   test('Codex preamble resolves runtime assets from repo-local or global gstack roots', () => {
-    // Check a skill that has a preamble (review is a good candidate)
+    // Check a skill that has a preamble (review is a good candidate).
+    // Thanx fork: the inline UPGRADE_AVAILABLE flow is gone, so we no longer
+    // assert a $GSTACK_ROOT/gstack-upgrade/SKILL.md reference. The other
+    // runtime-asset rewrites still apply.
     const content = fs.readFileSync(path.join(AGENTS_DIR, 'gstack-review', 'SKILL.md'), 'utf-8');
     expect(content).toContain('GSTACK_ROOT');
     expect(content).toContain('$_ROOT/.agents/skills/gstack');
     expect(content).toContain('$GSTACK_BIN/gstack-config');
-    expect(content).toContain('$GSTACK_ROOT/gstack-upgrade/SKILL.md');
     expect(content).not.toContain('~/.codex/skills/gstack/bin/gstack-config get telemetry');
   });
 
@@ -2976,16 +2978,20 @@ describe('plan-mode-info resolver (handshake-replacement)', () => {
     },
   );
 
-  test('plan-mode-info is wired BEFORE generateUpgradeCheck in preamble', () => {
+  // Thanx fork: the UPGRADE_AVAILABLE flow was removed, so the ordering test
+  // (plan-mode-info BEFORE generateUpgradeCheck) is obsolete. We keep a guard
+  // that plan-mode-info is present and lands BEFORE the proactive/skill_prefix
+  // block (which is what generateUpgradeCheck still emits).
+  test('plan-mode-info is wired BEFORE the proactive/skill_prefix block', () => {
     const content = fs.readFileSync(
       path.join(ROOT, 'plan-ceo-review', 'SKILL.md'),
       'utf-8',
     );
     const planModeIdx = content.indexOf(PLAN_MODE_INFO_MARKER);
-    const upgradeIdx = content.indexOf('UPGRADE_AVAILABLE');
+    const proactiveIdx = content.indexOf('`PROACTIVE` is `"false"`');
     expect(planModeIdx).toBeGreaterThan(0);
-    expect(upgradeIdx).toBeGreaterThan(0);
-    expect(planModeIdx).toBeLessThan(upgradeIdx);
+    expect(proactiveIdx).toBeGreaterThan(0);
+    expect(planModeIdx).toBeLessThan(proactiveIdx);
   });
 
   test('0C-bis STOP block present in plan-ceo-review/SKILL.md', () => {

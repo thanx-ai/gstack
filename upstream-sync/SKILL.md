@@ -23,7 +23,6 @@ allowed-tools:
   - Glob
   - AskUserQuestion
   - Agent
-sensitive: true
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
@@ -204,8 +203,9 @@ as `BLOCK` until the user signs off.
   `*.sh` / `*.bash` invoked by the SessionStart hook.
 - New or modified `scripts/resolvers/preamble/**` — this code is
   injected into every skill preamble and runs on every skill invocation.
-- Anything that writes to `~/.claude/settings.json` or registers a
-  `SessionStart` / `PreToolUse` / `PostToolUse` / `Stop` hook.
+- Anything that writes to `$HOME/.claude/settings.json` (the Claude Code
+  settings file) or registers a `SessionStart` / `PreToolUse` /
+  `PostToolUse` / `Stop` hook.
 - Anything that registers an MCP server (`claude mcp add ...`,
   `mcp_servers` config edits).
 
@@ -286,8 +286,9 @@ as `BLOCK` until the user signs off.
 
 ### I. Stuff specific to this fork
 
-- Any reintroduction of `gstack-update-check` or `gstack-session-update`
-  as a live network caller.
+- Any change that re-arms the disabled update-check / session-update
+  stubs in `bin/` (currently they `exit 0` — restoring their original
+  network-fetching bodies is the precise threat this fork defends against).
 - Any change that re-adds a SessionStart hook registration.
 - Any change that swaps `origin` from `thanx-ai/gstack` to anything else.
 - Any change to `/upstream-sync` itself (this skill) that loosens the
