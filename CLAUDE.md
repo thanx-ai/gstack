@@ -1,4 +1,35 @@
-# gstack development
+# gstack development (Thanx fork)
+
+This repo is the Thanx-maintained fork of `garrytan/gstack`. We pin to a
+reviewed snapshot rather than tracking upstream automatically. The supply-chain
+posture and the upstream-sync workflow are non-negotiable for this fork — read
+"Fork posture" before touching `bin/`, `setup`, hooks, or anything that runs at
+session start.
+
+## Fork posture
+
+- **`origin`** = `thanx-ai/gstack` (the Thanx fork). All `/gstack-upgrade`,
+  `git pull`, and PR-merge traffic goes through this remote.
+- **`upstream`** = `garrytan/gstack` (read-only). Only fetched explicitly via
+  `/upstream-sync`, and only after a file-by-file diff review. Never set
+  upstream as a push target.
+- **No auto-update.** The SessionStart hook (`bin/gstack-session-update`),
+  the inline upgrade flow (`generateUpgradeCheck` + `gstack-update-check`),
+  and the `--team` mode that wired them up have all been removed in this
+  fork. Skill preambles do not call `gstack-update-check`. If you find
+  yourself reintroducing a network call to a non-Thanx URL during normal
+  skill execution, stop and ask first.
+- **Updating the fork.** Use `/gstack-upgrade` to pull the latest reviewed
+  release from `thanx-ai/gstack`. Use `/upstream-sync` (the new skill) to
+  bring in upstream changes — it walks through every commit with a security
+  checklist and refuses to merge without explicit approval.
+- **Releasing the fork.** Bump `VERSION`, add a `CHANGELOG.md` entry, open a
+  PR to `thanx-ai/gstack`, land after human review. Same workflow as upstream
+  except we don't publish to anyone outside Thanx.
+
+When reviewing or modifying skills, ask: "would this run on every Claude Code
+session start?" If yes, the answer to "should it reach a non-Thanx URL?" is
+always no.
 
 ## Commands
 
@@ -346,7 +377,8 @@ before going live (especially if the user is actively using gstack in other wind
 config format, stale files) in ways that could break existing user installs, add a
 migration script to `gstack-upgrade/migrations/`. Read CONTRIBUTING.md's "Upgrade
 migrations" section for the format and testing requirements. The upgrade skill runs
-these automatically after `./setup` during `/gstack-upgrade`.
+these automatically after `./setup` during `/gstack-upgrade`. Migrations also run
+during `/upstream-sync` once an upstream merge is approved.
 
 ## Compiled binaries — NEVER commit browse/dist/ or design/dist/
 
@@ -778,3 +810,5 @@ Key routing rules:
 - Ship/deploy/PR → invoke /ship or /land-and-deploy
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
+- Pull from upstream `garrytan/gstack` → invoke /upstream-sync (NEVER `git pull upstream` directly — bypasses the security review)
+- Update from `thanx-ai/gstack` → invoke /gstack-upgrade

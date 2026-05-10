@@ -48,7 +48,8 @@ Invoke them by name (e.g., `/office-hours`).
 | `/landing-report` | Read-only dashboard for the workspace-aware ship queue. |
 | `/document-release` | Update all docs to match what you just shipped. |
 | `/setup-deploy` | One-time deploy config detection (Fly.io, Render, Vercel, etc.). |
-| `/gstack-upgrade` | Update gstack to the latest version. |
+| `/gstack-upgrade` | Pull the latest reviewed gstack release from origin (`thanx-ai/gstack`). |
+| `/upstream-sync` | Security-reviewed merge from upstream `garrytan/gstack` into the Thanx fork. |
 
 ### Operational + memory
 

@@ -22,6 +22,9 @@ import { generateQuestionTuning } from './question-tuning';
 
 // Core bootstrap
 import { generatePreambleBash } from './preamble/generate-preamble-bash';
+// Thanx fork: generateUpgradeCheck no longer emits the UPGRADE_AVAILABLE flow,
+// but still owns PROACTIVE / SKILL_PREFIX / feature-discovery prose. Upstream
+// merges go through /upstream-sync only.
 import { generateUpgradeCheck } from './preamble/generate-upgrade-check';
 import {
   generateCompletionStatus,

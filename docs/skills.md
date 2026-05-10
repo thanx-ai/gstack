@@ -51,7 +51,8 @@ Detailed guides for every gstack skill — philosophy, workflow, and examples.
 | [`/unfreeze`](#safety--guardrails) | **Unlock** | Remove the /freeze boundary, allowing edits everywhere again. |
 | [`/open-gstack-browser`](#open-gstack-browser) | **GStack Browser** | Launch GStack Browser with sidebar, anti-bot stealth, auto model routing, cookie import, and Claude Code integration. Watch every action live. |
 | [`/setup-deploy`](#setup-deploy) | **Deploy Configurator** | One-time setup for `/land-and-deploy`. Detects your platform, production URL, and deploy commands. |
-| [`/gstack-upgrade`](#gstack-upgrade) | **Self-Updater** | Upgrade gstack to the latest version. Detects global vs vendored install, syncs both, shows what changed. |
+| [`/gstack-upgrade`](#gstack-upgrade) | **Self-Updater (Thanx fork)** | Pull the latest reviewed fork release from `thanx-ai/gstack` and re-run setup. No remote VERSION poll, no auto-upgrade. |
+| [`/upstream-sync`](#upstream-sync) | **Upstream Sync (Thanx fork)** | Merge changes from upstream `garrytan/gstack` after an explicit file-by-file security review. Refuses to merge without your sign-off. |
 | [`/make-pdf`](#make-pdf) | **PDF Generator** | Turn any markdown file into a publication-quality PDF. Proper margins, page numbers, cover pages, clickable TOC. |
 
 ---

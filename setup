@@ -976,36 +976,32 @@ if [ ! -f "$HOME/.gstack/.welcome-seen" ]; then
 fi
 rm -f /tmp/gstack-latest-version
 
-# 10. Team mode: register/unregister SessionStart hook
+# 10. Thanx fork: --team no longer registers the SessionStart auto-update hook.
+# Auto-update is the supply-chain attack surface this fork eliminates. We still
+# remove any pre-existing hook on every setup run so old installs are cleaned up.
 SETTINGS_HOOK="$SOURCE_GSTACK_DIR/bin/gstack-settings-hook"
 HOOK_CMD="$SOURCE_GSTACK_DIR/bin/gstack-session-update"
 
+# Always force auto_upgrade off in this fork — never silently pull.
+"$GSTACK_CONFIG" set auto_upgrade false 2>/dev/null || true
+
+# Always remove any leftover SessionStart hook from a prior install.
+if [ -x "$SETTINGS_HOOK" ]; then
+  "$SETTINGS_HOOK" remove "$HOOK_CMD" 2>/dev/null || true
+fi
+
 if [ "$TEAM_MODE" -eq 1 ]; then
-  "$GSTACK_CONFIG" set auto_upgrade true 2>/dev/null || true
   "$GSTACK_CONFIG" set team_mode true 2>/dev/null || true
-
-  # Register SessionStart hook in Claude Code settings
-  if [ -x "$SETTINGS_HOOK" ]; then
-    "$SETTINGS_HOOK" add "$HOOK_CMD" 2>/dev/null || true
-  fi
-
   log ""
-  log "Team mode enabled: gstack will auto-update at the start of each Claude Code session."
-  log "  Hook: $HOOK_CMD"
-  log "  To disable: ./setup --no-team"
+  log "Team mode enabled (Thanx fork): vendored-copy management is on, auto-update is OFF."
+  log "  Updates happen via /gstack-upgrade (from thanx-ai/gstack) or"
+  log "  /upstream-sync (security-reviewed merge from upstream garrytan/gstack)."
   log ""
   log "Bootstrap your repo:"
   log "  cd <your-repo> && $SOURCE_GSTACK_DIR/bin/gstack-team-init required"
 fi
 
 if [ "$NO_TEAM_MODE" -eq 1 ]; then
-  "$GSTACK_CONFIG" set auto_upgrade false 2>/dev/null || true
   "$GSTACK_CONFIG" set team_mode false 2>/dev/null || true
-
-  # Remove SessionStart hook from Claude Code settings
-  if [ -x "$SETTINGS_HOOK" ]; then
-    "$SETTINGS_HOOK" remove "$HOOK_CMD" 2>/dev/null || true
-  fi
-
-  log "Team mode disabled: auto-update hook removed."
+  log "Team mode disabled."
 fi
