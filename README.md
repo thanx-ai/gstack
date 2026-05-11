@@ -1,5 +1,7 @@
 # gstack (Thanx fork)
 
+<!-- test: push-boundary check -->
+
 > **Thanx-maintained fork of [garrytan/gstack](https://github.com/garrytan/gstack).**
 > We pin to a known-reviewed snapshot rather than tracking upstream automatically.
 > Every change pulled from upstream goes through `/upstream-sync`, which performs
