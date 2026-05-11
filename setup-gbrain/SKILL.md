@@ -104,7 +104,6 @@ _CHECKPOINT_MODE=$(~/.claude/skills/gstack/bin/gstack-config get checkpoint_mode
 _CHECKPOINT_PUSH=$(~/.claude/skills/gstack/bin/gstack-config get checkpoint_push 2>/dev/null || echo "false")
 echo "CHECKPOINT_MODE: $_CHECKPOINT_MODE"
 echo "CHECKPOINT_PUSH: $_CHECKPOINT_PUSH"
-[ -n "$OPENCLAW_SESSION" ] && echo "SPAWNED_SESSION: true" || true
 ```
 
 ## Plan Mode Safe Operations
@@ -234,13 +233,6 @@ touch ~/.gstack/.vendoring-warned-${SLUG:-unknown}
 ```
 
 If marker exists, skip.
-
-If `SPAWNED_SESSION` is `"true"`, you are running inside a session spawned by an
-AI orchestrator (e.g., OpenClaw). In spawned sessions:
-- Do NOT use AskUserQuestion for interactive prompts. Auto-choose the recommended option.
-- Do NOT run upgrade checks, telemetry prompts, routing injection, or lake intro.
-- Focus on completing the task and reporting results via prose output.
-- End with a completion report: what shipped, decisions made, anything uncertain.
 
 ## AskUserQuestion Format
 
@@ -705,7 +697,7 @@ Claude Code) can call it as both a CLI and an MCP tool.
 (Cursor, Codex CLI, etc.) will still get the gbrain CLI on PATH — they can
 register `gbrain serve` in their own MCP config manually after setup.
 
-**Audience:** local-Mac users. openclaw/hermes agents typically run in cloud
+**Audience:** local-Mac users. hermes agents typically run in cloud
 docker containers with their own gbrain; "sharing" a brain between them and
 local Claude Code is only possible through shared Postgres (Supabase).
 
@@ -785,7 +777,7 @@ The question title: "Where should your brain live?"
 Options (present based on detected state):
 
 - **1 — Supabase, I already have a connection string.** Cloud-agent users
-  whose openclaw/hermes provisioned one already. Paste the Session Pooler
+  whose hermes provisioned one already. Paste the Session Pooler
   URL from the Supabase dashboard (Settings → Database → Connection Pooler
   → Session). *Trust-surface caveat to include in the prompt:* "Pasting this
   URL gives your local Claude Code full read/write access to every page your

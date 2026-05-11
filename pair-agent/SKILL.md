@@ -3,8 +3,8 @@ name: pair-agent
 version: 0.1.0
 description: |
   Pair a remote AI agent with your browser. One command generates a setup key and
-  prints instructions the other agent can follow to connect. Works with OpenClaw,
-  Hermes, Codex, Cursor, or any agent that can make HTTP requests. The remote agent
+  prints instructions the other agent can follow to connect. Works with Hermes,
+  Codex, Cursor, or any agent that can make HTTP requests. The remote agent
   gets its own tab with scoped access (read+write by default, admin on request).
   Use when asked to "pair agent", "connect agent", "share browser", "remote browser",
   "let another agent use my browser", or "give browser access". (gstack)
@@ -100,7 +100,6 @@ _CHECKPOINT_MODE=$(~/.claude/skills/gstack/bin/gstack-config get checkpoint_mode
 _CHECKPOINT_PUSH=$(~/.claude/skills/gstack/bin/gstack-config get checkpoint_push 2>/dev/null || echo "false")
 echo "CHECKPOINT_MODE: $_CHECKPOINT_MODE"
 echo "CHECKPOINT_PUSH: $_CHECKPOINT_PUSH"
-[ -n "$OPENCLAW_SESSION" ] && echo "SPAWNED_SESSION: true" || true
 ```
 
 ## Plan Mode Safe Operations
@@ -230,13 +229,6 @@ touch ~/.gstack/.vendoring-warned-${SLUG:-unknown}
 ```
 
 If marker exists, skip.
-
-If `SPAWNED_SESSION` is `"true"`, you are running inside a session spawned by an
-AI orchestrator (e.g., OpenClaw). In spawned sessions:
-- Do NOT use AskUserQuestion for interactive prompts. Auto-choose the recommended option.
-- Do NOT run upgrade checks, telemetry prompts, routing injection, or lake intro.
-- Focus on completing the task and reporting results via prose output.
-- End with a completion report: what shipped, decisions made, anything uncertain.
 
 ## AskUserQuestion Format
 
@@ -711,7 +703,7 @@ PLAN MODE EXCEPTION — always allowed (it's the plan file).
 # /pair-agent — Share Your Browser With Another AI Agent
 
 You're sitting in Claude Code with a browser running. You also have another AI agent
-open (OpenClaw, Hermes, Codex, Cursor, whatever). You want that other agent to be
+open (Hermes, Codex, Cursor, whatever). You want that other agent to be
 able to browse the web using YOUR browser. This skill makes that happen.
 
 ## How it works
@@ -724,9 +716,9 @@ browsing. Each agent gets its own tab. They can't mess with each other's tabs.
 The setup key expires in 5 minutes and can only be used once. If it leaks, it's dead
 before anyone can abuse it. The session token lasts 24 hours.
 
-**Same machine:** If the other agent is on the same machine (like OpenClaw running
-locally), you can skip the copy-paste ceremony and write the credentials directly to
-the agent's config directory.
+**Same machine:** If the other agent is on the same machine, you can skip the
+copy-paste ceremony and write the credentials directly to the agent's config
+directory.
 
 **Remote:** If the other agent is on a different machine, you need an ngrok tunnel.
 The skill will tell you if one is needed and how to set it up.
@@ -789,18 +781,16 @@ Use AskUserQuestion:
 > instructions format and where credentials get written.
 
 Options:
-- A) OpenClaw (local or remote)
-- B) Codex / OpenAI Agents (local)
-- C) Cursor (local)
-- D) Another Claude Code session (local or remote)
-- E) Something else (generic HTTP instructions — use this for Hermes)
+- A) Codex / OpenAI Agents (local)
+- B) Cursor (local)
+- C) Another Claude Code session (local or remote)
+- D) Something else (generic HTTP instructions — use this for Hermes)
 
 Based on the answer, set `TARGET_HOST`:
-- A → `openclaw`
-- B → `codex`
-- C → `cursor`
-- D → `claude`
-- E → generic (no host-specific config)
+- A → `codex`
+- B → `cursor`
+- C → `claude`
+- D → generic (no host-specific config)
 
 ## Step 3: Local or remote?
 
@@ -830,7 +820,7 @@ Run pair-agent with --local flag:
 $B pair-agent --local TARGET_HOST
 ```
 
-Replace `TARGET_HOST` with the value from Step 2 (openclaw, codex, cursor, etc.).
+Replace `TARGET_HOST` with the value from Step 2 (codex, cursor, etc.).
 
 If it succeeds, tell the user:
 "Done. TARGET_HOST can now use your browser. It will read credentials from the
@@ -970,13 +960,6 @@ generate a new setup key.
 (`$B status`). If local, check the browse server is running.
 
 ## Platform-specific notes
-
-### OpenClaw / AlphaClaw
-
-OpenClaw agents use the `exec` tool instead of `Bash`. The instruction block uses
-`exec curl` syntax which OpenClaw understands natively. When using `--local openclaw`,
-credentials are written to `~/.openclaw/skills/gstack/browse-remote.json`.
-
 
 ### Codex
 
