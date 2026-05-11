@@ -19,6 +19,19 @@ session start.
   fork. Skill preambles do not call `gstack-update-check`. If you find
   yourself reintroducing a network call to a non-Thanx URL during normal
   skill execution, stop and ask first.
+- **No telemetry to non-Thanx hosts.** Upstream POSTed local skill-usage
+  JSONL to a public Supabase project on every skill completion.
+  `bin/gstack-telemetry-sync` is now a stub, the `supabase/` config directory
+  is deleted, and `scripts/resolvers/preamble/generate-telemetry-prompt.ts`
+  returns `''` so no opt-in prompt fires. `bin/gstack-telemetry-log` still
+  writes a local JSONL for inspection but its sync trigger hits the stub.
+  Do not point `GSTACK_SUPABASE_URL` at any non-Thanx host.
+- **Policy-violating skills are gated.** `/setup-deploy`, `/setup-gbrain`,
+  and the remote-pairing path of `/pair-agent` run `bin/gstack-thanx-fork-check`
+  in Step 0 and refuse on Thanx-fork installs. Detection is git-remote-based
+  (origin contains `thanx-ai/gstack`) with a `$GSTACK_THANX_FORK` override.
+  If a Thanx engineer has a legit internal use case, route through
+  `#ai-help-desk`.
 - **Updating the fork.** Use `/gstack-upgrade` to pull the latest reviewed
   release from `thanx-ai/gstack`. Use `/upstream-sync` (the new skill) to
   bring in upstream changes — it walks through every commit with a security
@@ -382,17 +395,17 @@ during `/upstream-sync` once an upstream merge is approved.
 
 ## Compiled binaries — NEVER commit browse/dist/ or design/dist/
 
-The `browse/dist/` and `design/dist/` directories contain compiled Bun binaries
-(`browse`, `find-browse`, `design`, ~58MB each). These are Mach-O arm64 only — they
-do NOT work on Linux, Windows, or Intel Macs. The `./setup` script already builds
-from source for every platform, so the checked-in binaries are redundant. They are
-tracked by git due to a historical mistake and should eventually be removed with
-`git rm --cached`.
+The `browse/dist/`, `design/dist/`, and `make-pdf/dist/` directories contain
+compiled Bun binaries (`browse`, `find-browse`, `design`, `pdf`, ~58MB each).
+These are Mach-O arm64 only — they do NOT work on Linux, Windows, or Intel
+Macs. The `./setup` script builds them from source on each install.
 
-**NEVER stage or commit these files.** They show up as modified in `git status`
-because they're tracked despite `.gitignore` — ignore them. When staging files,
-always use specific filenames (`git add file1 file2`) — never `git add .` or
-`git add -A`, which will accidentally include the binaries.
+These directories are properly gitignored (`.gitignore`) and NOT tracked.
+`git status` should never show them. If you ever see one of them staged,
+unstage it (`git restore --staged <path>`) — never commit a compiled binary.
+When staging files, always use specific filenames (`git add file1 file2`) —
+never `git add .` or `git add -A`, which would accidentally include
+local-only build artifacts.
 
 ## Commit style
 

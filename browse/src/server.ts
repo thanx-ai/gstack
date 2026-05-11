@@ -1491,12 +1491,20 @@ async function start() {
         }
         try {
           const pairBody = await req.json() as any;
-          // Default: full access (read+write+admin+meta). The trust boundary is
-          // the pairing ceremony itself, not the scope. --control adds browser-wide
-          // destructive commands (stop, restart, disconnect). --restrict limits scope.
-          const scopes = pairBody.control || pairBody.admin
-            ? ['read', 'write', 'admin', 'meta', 'control'] as const
-            : (pairBody.scopes || ['read', 'write', 'admin', 'meta']) as const;
+          // Default: read+write only — paired agent can drive its own tab but
+          // cannot eval JS, read cookies/storage, or change browser-wide state.
+          // --admin upgrades to admin+meta (JS eval, cookie/storage read).
+          // --control adds browser-wide destructive commands (stop, restart,
+          // disconnect). --restrict can further narrow the explicit set.
+          // Trust boundary is the pairing ceremony; default is least-privilege.
+          let scopes: readonly string[];
+          if (pairBody.control) {
+            scopes = ['read', 'write', 'admin', 'meta', 'control'] as const;
+          } else if (pairBody.admin) {
+            scopes = ['read', 'write', 'admin', 'meta'] as const;
+          } else {
+            scopes = (pairBody.scopes || ['read', 'write']) as const;
+          }
           const setupKey = createSetupKey({
             clientId: pairBody.clientId,
             scopes: [...scopes],

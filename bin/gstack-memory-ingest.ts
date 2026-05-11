@@ -916,12 +916,23 @@ async function ingestPass(args: CliArgs): Promise<BulkResult> {
       continue;
     }
 
-    // Secret scan first
+    // Secret scan first — fail closed if gitleaks is missing or errored.
+    // Transcripts can contain pasted secrets; we will not push them to a
+    // remote without an actual clean scan.
     const scan = secretScanFile(path);
     if (scan.scanner === "gitleaks" && scan.findings.length > 0) {
       skippedSecret++;
       if (!args.quiet) {
         console.error(`[secret-scan match] ${path} (${scan.findings.length} finding${scan.findings.length === 1 ? "" : "s"}); skipped`);
+      }
+      continue;
+    }
+    if (scan.scanner !== "gitleaks") {
+      skippedSecret++;
+      if (!args.quiet) {
+        console.error(
+          `[secret-scan ${scan.scanner}] ${path}; skipped (gitleaks required for ingest — install via \`brew install gitleaks\`)`
+        );
       }
       continue;
     }

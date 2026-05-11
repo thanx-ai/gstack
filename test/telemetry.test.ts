@@ -376,9 +376,9 @@ describe('gstack-telemetry-sync', () => {
   });
 });
 
-describe('gstack-community-dashboard', () => {
+describe('gstack-community-dashboard (Thanx fork)', () => {
   test('shows unconfigured message when no Supabase config available', () => {
-    // Use a fake GSTACK_DIR with no supabase/config.sh
+    // Use a fake GSTACK_DIR with no supabase/config.sh.
     const output = run(`${BIN}/gstack-community-dashboard`, {
       GSTACK_DIR: tmpDir,
       GSTACK_SUPABASE_URL: '',
@@ -388,12 +388,13 @@ describe('gstack-community-dashboard', () => {
     expect(output).toContain('gstack-analytics');
   });
 
-  test('connects to Supabase when config exists', () => {
-    // Use the real GSTACK_DIR which has supabase/config.sh
+  test('remains unconfigured in the Thanx fork (no supabase/ directory)', () => {
+    // The Thanx fork deletes supabase/config.sh so the dashboard always
+    // fails-closed without curl-ing the upstream Supabase host. This test
+    // guards against accidental re-introduction of the public Supabase URL.
     const output = run(`${BIN}/gstack-community-dashboard`);
-    expect(output).toContain('gstack community dashboard');
-    // Should not show "not configured" since config.sh exists
-    expect(output).not.toContain('Supabase not configured');
+    expect(output).toContain('Supabase not configured');
+    expect(output).not.toContain('frugpmstpnojnhfyimgv.supabase.co');
   });
 });
 
