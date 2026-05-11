@@ -73,7 +73,7 @@ Invoke them by name (e.g., `/office-hours`).
 | `/browse` | Headless browser — real Chromium, real clicks, ~100ms/command. |
 | `/open-gstack-browser` | Launch the visible GStack Browser with sidebar + stealth. |
 | `/setup-browser-cookies` | Import cookies from your real browser for authenticated testing. |
-| `/pair-agent` | Pair a remote AI agent (OpenClaw, Codex, etc.) with your browser. |
+| `/pair-agent` | Pair a remote AI agent (Codex, Cursor, Hermes, etc.) with your browser. |
 
 ### Safety + scoping
 
