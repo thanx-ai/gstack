@@ -1,31 +1,18 @@
 import type { TemplateContext } from '../types';
 
-export function generateTelemetryPrompt(ctx: TemplateContext): string {
-  return `If \`TEL_PROMPTED\` is \`no\` AND \`LAKE_INTRO\` is \`yes\`: ask telemetry once via AskUserQuestion:
-
-> Help gstack get better. Share usage data only: skill, duration, crashes, stable device ID. No code, file paths, or repo names.
-
-Options:
-- A) Help gstack get better! (recommended)
-- B) No thanks
-
-If A: run \`${ctx.paths.binDir}/gstack-config set telemetry community\`
-
-If B: ask follow-up:
-
-> Anonymous mode sends only aggregate usage, no unique ID.
-
-Options:
-- A) Sure, anonymous is fine
-- B) No thanks, fully off
-
-If B→A: run \`${ctx.paths.binDir}/gstack-config set telemetry anonymous\`
-If B→B: run \`${ctx.paths.binDir}/gstack-config set telemetry off\`
-
-Always run:
-\`\`\`bash
-touch ~/.gstack/.telemetry-prompted
-\`\`\`
-
-Skip if \`TEL_PROMPTED\` is \`yes\`.`;
+/**
+ * Thanx fork: the telemetry opt-in prompt is disabled.
+ *
+ * Upstream gstack prompted the user once via AskUserQuestion to enable
+ * telemetry to a public Supabase project. Accepting would POST
+ * skill-usage events to a non-Thanx host. The sync binary
+ * (bin/gstack-telemetry-sync) is also stubbed and supabase/config.sh
+ * is deleted; this resolver returning '' keeps the foot-gun off the UI.
+ *
+ * Do not reintroduce a prompt that turns on remote telemetry without an
+ * /upstream-sync security review.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function generateTelemetryPrompt(_ctx: TemplateContext): string {
+  return '';
 }

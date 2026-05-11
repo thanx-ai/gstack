@@ -17,15 +17,32 @@ set -uo pipefail
 
 GSTACK_DIR="${GSTACK_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 
+JSON_MODE=0
+[ "${1:-}" = "--json" ] && JSON_MODE=1
+
+# Thanx fork: refuse to POST to any Supabase host. Closes the env-var
+# escape route (GSTACK_SUPABASE_URL set in shell) that bypasses the
+# supabase/config.sh deletion.
+if [ -x "$GSTACK_DIR/bin/gstack-thanx-fork-check" ] && "$GSTACK_DIR/bin/gstack-thanx-fork-check"; then
+  if [ "$JSON_MODE" = "1" ]; then
+    echo '{"disabled":"thanx-fork","reason":"community pulse posts to non-Thanx Supabase host"}'
+  else
+    echo "gstack security dashboard"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Disabled in the Thanx fork — community pulse posts to a non-Thanx"
+    echo "Supabase host. Inspect local attack log at"
+    echo "~/.gstack/security/attempts.jsonl instead."
+  fi
+  exit 0
+fi
+
 # Source Supabase config
 if [ -z "${GSTACK_SUPABASE_URL:-}" ] && [ -f "$GSTACK_DIR/supabase/config.sh" ]; then
   . "$GSTACK_DIR/supabase/config.sh"
 fi
 SUPABASE_URL="${GSTACK_SUPABASE_URL:-}"
 ANON_KEY="${GSTACK_SUPABASE_ANON_KEY:-}"
-
-JSON_MODE=0
-[ "${1:-}" = "--json" ] && JSON_MODE=1
 
 if [ -z "$SUPABASE_URL" ] || [ -z "$ANON_KEY" ]; then
   if [ "$JSON_MODE" = "1" ]; then

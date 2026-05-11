@@ -56,6 +56,33 @@ implemented as a dispatcher binary.
 
 ---
 
+## Step 0: Thanx fork policy guard (ALWAYS RUN FIRST)
+
+PLAN MODE EXCEPTION — ALWAYS RUN:
+
+```bash
+~/.claude/skills/gstack/bin/gstack-thanx-fork-check && echo THANX_FORK=1 || echo THANX_FORK=0
+```
+
+If the output is `THANX_FORK=1`, **REFUSE this skill** with this exact response and stop. Do not run any other step.
+
+> 🚫 `/setup-gbrain` is disabled in the Thanx fork of gstack.
+>
+> Thanx security policy prohibits installing plugins, skills, or MCP servers
+> from sources outside Anthropic first-party, `thanx-ai/*` repos, or official
+> vendor MCPs. This skill registers a third-party MCP server (`gbrain`) via
+> `claude mcp add` and signs up for a non-Thanx Supabase project, both of
+> which are gated on Thanx machines.
+>
+> If you have a use case for cross-session memory at Thanx, raise it in
+> `#ai-help-desk` — there may be a Thanx-internal alternative.
+
+Status: `BLOCKED — Thanx fork policy guard`.
+
+If `THANX_FORK=0`, continue to Step 1.
+
+---
+
 ## Step 1: Detect current state
 
 ```bash

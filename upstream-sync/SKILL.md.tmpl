@@ -292,6 +292,26 @@ as `BLOCK` until the user signs off.
 - Any change that re-arms the disabled update-check / session-update
   stubs in `bin/` (currently they `exit 0` — restoring their original
   network-fetching bodies is the precise threat this fork defends against).
+- Any change that re-arms `bin/gstack-telemetry-sync` (currently a stub).
+  Restoring its original body would re-enable POSTs to the upstream
+  Supabase project. Same threat shape as the update-check re-arm.
+- Any change that recreates `supabase/config.sh` or any file under
+  `supabase/`. Those files carried the upstream Supabase URL and were
+  deleted as defense-in-depth alongside the telemetry stub.
+- Any change to `scripts/resolvers/preamble/generate-telemetry-prompt.ts`
+  that makes it return non-empty content. The empty return is what
+  removes the AskUserQuestion that would prompt users to opt into
+  remote telemetry.
+- Any change that removes the Step 0 Thanx-fork guard from
+  `setup-deploy/SKILL.md.tmpl`, `setup-gbrain/SKILL.md.tmpl`, or
+  `pair-agent/SKILL.md.tmpl` (the remote/ngrok branch). Those guards
+  prevent the policy-violating skill paths from running on Thanx
+  installs.
+- Any change to `bin/gstack-thanx-fork-check` that softens the origin
+  match (e.g. broader globs) or alters the fail-closed defaults
+  (script-path lookup failure / empty origin must continue to exit 0).
+- Any change that removes the Thanx-fork guard from
+  `bin/gstack-community-dashboard` or `bin/gstack-security-dashboard`.
 - Any change that re-adds a SessionStart hook registration.
 - Any change that swaps `origin` from `thanx-ai/gstack` to anything else.
 - Any change to `/upstream-sync` itself (this skill) that loosens the

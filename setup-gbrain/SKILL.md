@@ -151,34 +151,6 @@ touch ~/.gstack/.completeness-intro-seen
 
 Only run `open` if yes. Always run `touch`.
 
-If `TEL_PROMPTED` is `no` AND `LAKE_INTRO` is `yes`: ask telemetry once via AskUserQuestion:
-
-> Help gstack get better. Share usage data only: skill, duration, crashes, stable device ID. No code, file paths, or repo names.
-
-Options:
-- A) Help gstack get better! (recommended)
-- B) No thanks
-
-If A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry community`
-
-If B: ask follow-up:
-
-> Anonymous mode sends only aggregate usage, no unique ID.
-
-Options:
-- A) Sure, anonymous is fine
-- B) No thanks, fully off
-
-If B→A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry anonymous`
-If B→B: run `~/.claude/skills/gstack/bin/gstack-config set telemetry off`
-
-Always run:
-```bash
-touch ~/.gstack/.telemetry-prompted
-```
-
-Skip if `TEL_PROMPTED` is `yes`.
-
 If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 > Let gstack proactively suggest skills, like /qa for "does this work?" or /investigate for bugs?
@@ -749,6 +721,33 @@ When the user types `/setup-gbrain`, run this skill. Three shortcut modes:
 
 Parse the invocation args yourself — these are prose hints to the skill, not
 implemented as a dispatcher binary.
+
+---
+
+## Step 0: Thanx fork policy guard (ALWAYS RUN FIRST)
+
+PLAN MODE EXCEPTION — ALWAYS RUN:
+
+```bash
+~/.claude/skills/gstack/bin/gstack-thanx-fork-check && echo THANX_FORK=1 || echo THANX_FORK=0
+```
+
+If the output is `THANX_FORK=1`, **REFUSE this skill** with this exact response and stop. Do not run any other step.
+
+> 🚫 `/setup-gbrain` is disabled in the Thanx fork of gstack.
+>
+> Thanx security policy prohibits installing plugins, skills, or MCP servers
+> from sources outside Anthropic first-party, `thanx-ai/*` repos, or official
+> vendor MCPs. This skill registers a third-party MCP server (`gbrain`) via
+> `claude mcp add` and signs up for a non-Thanx Supabase project, both of
+> which are gated on Thanx machines.
+>
+> If you have a use case for cross-session memory at Thanx, raise it in
+> `#ai-help-desk` — there may be a Thanx-internal alternative.
+
+Status: `BLOCKED — Thanx fork policy guard`.
+
+If `THANX_FORK=0`, continue to Step 1.
 
 ---
 

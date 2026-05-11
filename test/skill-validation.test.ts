@@ -270,6 +270,99 @@ describe('No auto-update in generated SKILL.md (Thanx fork)', () => {
   });
 });
 
+// --- No remote telemetry in generated SKILL.md files (Thanx fork) ---
+//
+// The Thanx fork removed the opt-in prompt and stubbed gstack-telemetry-sync
+// so no skill POSTs JSONL events to a non-Thanx host. These tests guard
+// against accidental reintroduction.
+
+describe('No remote telemetry in generated SKILL.md (Thanx fork)', () => {
+  const generatedSkills = [
+    'SKILL.md', 'browse/SKILL.md', 'qa/SKILL.md',
+    'qa-only/SKILL.md',
+    'setup-browser-cookies/SKILL.md',
+    'ship/SKILL.md', 'review/SKILL.md',
+    'plan-ceo-review/SKILL.md', 'plan-eng-review/SKILL.md',
+    'retro/SKILL.md',
+    'office-hours/SKILL.md', 'investigate/SKILL.md',
+    'plan-design-review/SKILL.md',
+    'design-review/SKILL.md',
+    'design-consultation/SKILL.md',
+    'document-release/SKILL.md',
+    'canary/SKILL.md',
+    'benchmark/SKILL.md',
+    'land-and-deploy/SKILL.md',
+    'setup-deploy/SKILL.md',
+    'cso/SKILL.md',
+  ];
+
+  for (const skill of generatedSkills) {
+    test(`${skill} does not reference the upstream Supabase host`, () => {
+      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
+      expect(content).not.toContain('frugpmstpnojnhfyimgv.supabase.co');
+      expect(content).not.toContain('telemetry-ingest');
+    });
+
+    test(`${skill} does not prompt the user to enable remote telemetry`, () => {
+      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
+      // The upstream prompt's identifying strings — if any of them come back,
+      // the resolver was unstubbed.
+      expect(content).not.toContain('Help gstack get better');
+      expect(content).not.toContain('gstack-config set telemetry community');
+      expect(content).not.toContain('gstack-config set telemetry anonymous');
+    });
+  }
+
+  test('gstack-telemetry-sync is a stub (no live curl, no live Supabase URL)', () => {
+    const sync = fs.readFileSync(path.join(ROOT, 'bin', 'gstack-telemetry-sync'), 'utf-8');
+    // Strip comment lines so documentation mentions of the historical URL don't trip
+    // the guard. Bash comment = line whose first non-whitespace char is #.
+    const activeCode = sync
+      .split('\n')
+      .filter((line) => !/^\s*#/.test(line))
+      .join('\n');
+    expect(activeCode).not.toContain('curl');
+    expect(activeCode).not.toContain('frugpmstpnojnhfyimgv.supabase.co');
+    expect(activeCode).not.toMatch(/SUPABASE_URL\s*=/);
+    expect(activeCode).toContain('exit 0');
+  });
+
+  test('supabase/ config directory does not exist', () => {
+    // Carries the public Supabase URL + anon key. Deleted in the Thanx fork.
+    expect(fs.existsSync(path.join(ROOT, 'supabase'))).toBe(false);
+  });
+});
+
+// --- Policy-gated skills run the Thanx-fork check (Thanx fork) ---
+//
+// /setup-deploy and /setup-gbrain refuse entirely on Thanx-fork installs.
+// /pair-agent refuses only the remote/ngrok path. Each must invoke
+// bin/gstack-thanx-fork-check in its generated SKILL.md.
+
+describe('Policy-gated skills run Thanx-fork check (Thanx fork)', () => {
+  const gated = [
+    'setup-deploy/SKILL.md',
+    'setup-gbrain/SKILL.md',
+    'pair-agent/SKILL.md',
+  ];
+
+  for (const skill of gated) {
+    test(`${skill} invokes gstack-thanx-fork-check`, () => {
+      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
+      expect(content).toContain('gstack-thanx-fork-check');
+      expect(content).toMatch(/THANX_FORK=1/);
+    });
+  }
+
+  test('gstack-thanx-fork-check binary exists and is executable', () => {
+    const p = path.join(ROOT, 'bin', 'gstack-thanx-fork-check');
+    expect(fs.existsSync(p)).toBe(true);
+    const stat = fs.statSync(p);
+    // owner-execute bit
+    expect(stat.mode & 0o100).toBeTruthy();
+  });
+});
+
 // --- Part 7: Cross-skill path consistency (A1) ---
 
 describe('Cross-skill path consistency', () => {

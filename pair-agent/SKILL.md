@@ -147,34 +147,6 @@ touch ~/.gstack/.completeness-intro-seen
 
 Only run `open` if yes. Always run `touch`.
 
-If `TEL_PROMPTED` is `no` AND `LAKE_INTRO` is `yes`: ask telemetry once via AskUserQuestion:
-
-> Help gstack get better. Share usage data only: skill, duration, crashes, stable device ID. No code, file paths, or repo names.
-
-Options:
-- A) Help gstack get better! (recommended)
-- B) No thanks
-
-If A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry community`
-
-If B: ask follow-up:
-
-> Anonymous mode sends only aggregate usage, no unique ID.
-
-Options:
-- A) Sure, anonymous is fine
-- B) No thanks, fully off
-
-If B→A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry anonymous`
-If B→B: run `~/.claude/skills/gstack/bin/gstack-config set telemetry off`
-
-Always run:
-```bash
-touch ~/.gstack/.telemetry-prompted
-```
-
-Skip if `TEL_PROMPTED` is `yes`.
-
 If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 > Let gstack proactively suggest skills, like /qa for "does this work?" or /investigate for bugs?
@@ -868,6 +840,29 @@ If it fails (host not found, write permission error), show the error and suggest
 using the generic remote flow instead.
 
 ### If different machine (option B):
+
+**Thanx fork policy guard — ALWAYS RUN FIRST on the remote/ngrok path:**
+
+```bash
+~/.claude/skills/gstack/bin/gstack-thanx-fork-check && echo THANX_FORK=1 || echo THANX_FORK=0
+```
+
+If the output is `THANX_FORK=1`, **REFUSE the remote-pairing path** with this exact response and stop. Local pairing (option A above) is still allowed.
+
+> 🚫 Remote `/pair-agent` (ngrok tunnel) is disabled in the Thanx fork of gstack.
+>
+> Thanx security policy prohibits exposing local services via tunnels (ngrok,
+> etc.) to anyone outside Thanx. A pair-agent ngrok tunnel would let an
+> external party drive your browser, read cookies, and reach internal Thanx
+> services via your VPN — outside the bounds of the policy.
+>
+> Local pairing (same machine) is fine — rerun `/pair-agent` and pick
+> **Same machine** at Step 3. For genuinely cross-machine collaboration
+> with another Thanx engineer, raise it in `#ai-help-desk`.
+
+Status: `BLOCKED — Thanx fork policy guard (remote pairing)`.
+
+If `THANX_FORK=0`, continue with ngrok detection below.
 
 First, detect ngrok status:
 

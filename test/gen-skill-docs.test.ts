@@ -2481,13 +2481,15 @@ describe('telemetry', () => {
     expect(content).toContain('gstack-config get telemetry');
   });
 
-  test('generated SKILL.md contains telemetry opt-in prompt', () => {
+  // Thanx fork: the telemetry opt-in prompt is removed
+  // (scripts/resolvers/preamble/generate-telemetry-prompt.ts returns ''),
+  // so accepting it can no longer turn on POSTs to a non-Thanx Supabase host.
+  // This test guards against accidental reintroduction.
+  test('generated SKILL.md does NOT contain telemetry opt-in prompt (Thanx fork)', () => {
     const content = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf-8');
-    expect(content).toContain('.telemetry-prompted');
-    expect(content).toContain('Help gstack get better');
-    expect(content).toContain('gstack-config set telemetry community');
-    expect(content).toContain('gstack-config set telemetry anonymous');
-    expect(content).toContain('gstack-config set telemetry off');
+    expect(content).not.toContain('Help gstack get better');
+    expect(content).not.toContain('gstack-config set telemetry community');
+    expect(content).not.toContain('gstack-config set telemetry anonymous');
   });
 
   test('generated SKILL.md contains telemetry epilogue', () => {

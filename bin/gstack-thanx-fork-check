@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# gstack-thanx-fork-check — detect whether this gstack install is the Thanx fork.
+#
+# Exits 0 (silently) when origin of the gstack repo is the Thanx fork.
+# Exits 1 (silently) when origin is upstream garrytan/gstack or anything else.
+#
+# Used by policy-gated skills (/setup-deploy, /pair-agent --remote,
+# /setup-gbrain) to hard-refuse actions that would violate Thanx security
+# policy (public-cloud deploy, public-internet tunnel, third-party MCP).
+#
+# Overrides for testing and explicit policy decisions:
+#   GSTACK_THANX_FORK=1|true|yes  → force-positive (block gated skills)
+#   GSTACK_THANX_FORK=0|false|no  → force-negative (allow gated skills)
+#   GSTACK_DIR=<path>             → override gstack repo location (skip script-path resolution)
+
+set -uo pipefail
+
+# Explicit override wins.
+case "${GSTACK_THANX_FORK:-}" in
+  1|true|yes) exit 0 ;;
+  0|false|no) exit 1 ;;
+esac
+
+# Locate the gstack repo containing this script (works for symlinked installs).
+if [ -n "${GSTACK_DIR:-}" ]; then
+  _GSTACK_DIR="$GSTACK_DIR"
+else
+  _SCRIPT_REAL="$(cd "$(dirname "$0")" 2>/dev/null && pwd -P || echo "")"
+  _GSTACK_DIR="${_SCRIPT_REAL%/bin}"
+fi
+
+# Security-relevant default: when origin lookup fails for any reason
+# (missing .git, lock contention during a rebase, corrupted packfile,
+# permission error), we exit 0 = treat as Thanx fork = BLOCK the gated
+# skill. False positives on non-Thanx installs during a transient git
+# failure are tolerable; false negatives on Thanx installs are not.
+[ -z "$_GSTACK_DIR" ] && exit 0
+[ -d "$_GSTACK_DIR/.git" ] || [ -f "$_GSTACK_DIR/.git" ] || exit 0
+
+_ORIGIN="$(git -C "$_GSTACK_DIR" remote get-url origin 2>/dev/null || true)"
+
+# Empty origin (git call failed or no remote configured) → fail closed,
+# same reasoning as above.
+[ -z "$_ORIGIN" ] && exit 0
+
+# `*thanx-ai/gstack*` already matches URLs ending in `.git` (it's a glob,
+# not a regex), so we don't list the suffix variants explicitly.
+case "$_ORIGIN" in
+  *thanx-ai/gstack*|*thanx/gstack*)
+    exit 0
+    ;;
+  *)
+    exit 1
+    ;;
+esac

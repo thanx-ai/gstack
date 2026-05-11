@@ -376,9 +376,9 @@ describe('gstack-telemetry-sync', () => {
   });
 });
 
-describe('gstack-community-dashboard', () => {
+describe('gstack-community-dashboard (Thanx fork)', () => {
   test('shows unconfigured message when no Supabase config available', () => {
-    // Use a fake GSTACK_DIR with no supabase/config.sh
+    // Use a fake GSTACK_DIR with no supabase/config.sh.
     const output = run(`${BIN}/gstack-community-dashboard`, {
       GSTACK_DIR: tmpDir,
       GSTACK_SUPABASE_URL: '',
@@ -388,12 +388,16 @@ describe('gstack-community-dashboard', () => {
     expect(output).toContain('gstack-analytics');
   });
 
-  test('connects to Supabase when config exists', () => {
-    // Use the real GSTACK_DIR which has supabase/config.sh
-    const output = run(`${BIN}/gstack-community-dashboard`);
-    expect(output).toContain('gstack community dashboard');
-    // Should not show "not configured" since config.sh exists
-    expect(output).not.toContain('Supabase not configured');
+  test('refuses on Thanx fork even when GSTACK_SUPABASE_URL is set', () => {
+    // The Thanx fork deletes supabase/config.sh AND gates the dashboard
+    // on bin/gstack-thanx-fork-check, so even an env-var override can't
+    // make it POST to the upstream Supabase host.
+    const output = run(`${BIN}/gstack-community-dashboard`, {
+      GSTACK_SUPABASE_URL: 'https://frugpmstpnojnhfyimgv.supabase.co',
+      GSTACK_SUPABASE_ANON_KEY: 'sb_publishable_should_not_be_used',
+    });
+    expect(output).toContain('Disabled in the Thanx fork');
+    expect(output).not.toContain('frugpmstpnojnhfyimgv.supabase.co');
   });
 });
 
