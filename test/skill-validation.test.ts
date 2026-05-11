@@ -1628,7 +1628,7 @@ describe('Doc inventory cross-check', () => {
   const DOC_INVENTORY_EXCLUDE = new Set([
     // Infra / non-skills
     'agents', 'claude', 'connect-chrome', 'contrib', 'hosts',
-    'lib', 'model-overlays', 'openclaw', 'supabase', 'scripts', 'test',
+    'lib', 'model-overlays', 'supabase', 'scripts', 'test',
   ]);
 
   function discoverSkillDirs(): string[] {

@@ -1,7 +1,7 @@
 /**
  * Declarative host config system.
  *
- * Each supported host (Claude, Codex, Factory, OpenCode, OpenClaw, etc.) is
+ * Each supported host (Claude, Codex, Factory, OpenCode, etc.) is
  * defined as a typed HostConfig object in hosts/*.ts. This module provides
  * the interface, loader, and validator.
  *
@@ -105,10 +105,6 @@ export interface HostConfig {
   /** Anti-prompt-injection boundary instruction for cross-model invocations. */
   boundaryInstruction?: string;
 
-  /** Static files to copy alongside generated skills (e.g., { 'SOUL.md': 'openclaw/SOUL.md' }). */
-  staticFiles?: Record<string, string>;
-  /** Optional path to host-adapter module for complex transformations. */
-  adapter?: string;
 }
 
 // --- Validation ---

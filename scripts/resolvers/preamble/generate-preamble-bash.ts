@@ -90,8 +90,7 @@ echo "MODEL_OVERLAY: ${ctx.model ?? 'none'}"
 _CHECKPOINT_MODE=$(${ctx.paths.binDir}/gstack-config get checkpoint_mode 2>/dev/null || echo "explicit")
 _CHECKPOINT_PUSH=$(${ctx.paths.binDir}/gstack-config get checkpoint_push 2>/dev/null || echo "false")
 echo "CHECKPOINT_MODE: $_CHECKPOINT_MODE"
-echo "CHECKPOINT_PUSH: $_CHECKPOINT_PUSH"
-[ -n "$OPENCLAW_SESSION" ] && echo "SPAWNED_SESSION: true" || true${ctx.host === 'gbrain' || ctx.host === 'hermes' ? `
+echo "CHECKPOINT_PUSH: $_CHECKPOINT_PUSH"${ctx.host === 'gbrain' || ctx.host === 'hermes' ? `
 if command -v gbrain &>/dev/null; then
   _BRAIN_JSON=$(gbrain doctor --fast --json 2>/dev/null || echo '{}')
   _BRAIN_SCORE=$(echo "$_BRAIN_JSON" | grep -o '"health_score":[0-9]*' | cut -d: -f2)

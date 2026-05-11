@@ -37,7 +37,6 @@ import { generateTelemetryPrompt } from './preamble/generate-telemetry-prompt';
 import { generateProactivePrompt } from './preamble/generate-proactive-prompt';
 import { generateRoutingInjection } from './preamble/generate-routing-injection';
 import { generateVendoringDeprecation } from './preamble/generate-vendoring-deprecation';
-import { generateSpawnedSessionCheck } from './preamble/generate-spawned-session-check';
 import { generateWritingStyleMigration } from './preamble/generate-writing-style-migration';
 
 // Host-specific instructions
@@ -99,7 +98,6 @@ export function generatePreamble(ctx: TemplateContext): string {
     generateProactivePrompt(ctx),
     generateRoutingInjection(ctx),
     generateVendoringDeprecation(ctx),
-    generateSpawnedSessionCheck(),
     generateBrainHealthInstruction(ctx),
     // AskUserQuestion Format renders BEFORE the model overlay so the pacing rule
     // is the ambient default; the overlay's behavioral nudges land as subordinate
