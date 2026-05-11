@@ -42,7 +42,7 @@ Preserved for the un-tabling sprint if/when Anthropic ships the built-in-tool ou
 Summary of every decision made during the engineering review. Full rationale is preserved throughout the sections below; this block is the single source of truth if anything else drifts.
 
 **Scope (Section 0):**
-1. **Claude-first v1.** Ship compact + rules + verifier on Claude Code only. Codex + OpenClaw land at v1.1 after the wedge is proven on the primary host. Cuts ~2 days of host integration and derisks launch. The original "wedge (ii) native-tool coverage" claim applies to Claude Code at v1; we make no cross-host claim until v1.1.
+1. **Claude-first v1.** Ship compact + rules + verifier on Claude Code only. Codex land at v1.1 after the wedge is proven on the primary host. Cuts ~2 days of host integration and derisks launch. The original "wedge (ii) native-tool coverage" claim applies to Claude Code at v1; we make no cross-host claim until v1.1.
 2. **13-rule launch library.** v1 ships tests (jest/vitest/pytest/cargo-test/go-test/rspec) + git (diff/log/status) + install (npm/pnpm/pip/cargo). Build/lint/log families defer to v1.1, driven by `gstack compact discover` telemetry from real users.
 3. **Verifier default ON at v1.0.** `failureCompaction` trigger (exit≠0 AND >50% reduction) is enabled out of the box. The verifier IS the wedge — defaulting it off hides the differentiating feature. Trigger bounds already keep expected fire rate ≤10% of tool calls.
 
@@ -121,7 +121,7 @@ RTK is the only direct competitor. Everything else compresses a different token 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Host (Claude Code / Codex / OpenClaw)                          │
+│  Host (Claude Code / Codex)                                     │
 │  ─────────────────────────────────────────                      │
 │  1. Agent requests tool call: Bash|Read|Grep|Glob|MCP           │
 │  2. Host executes tool                                          │
@@ -318,9 +318,8 @@ The agent can read the tee file directly if it needs the full stack trace. This 
 |------|-----------|-------------------|-------------|
 | Claude Code | `PostToolUse` | Bash, Read, Grep, Glob, Edit, Write, WebFetch, WebSearch, mcp__* | `~/.claude/settings.json` |
 | Codex (v1.1) | `PostToolUse` equivalent | Bash (primary); tool subset TBD — empirical verification is a v1.1 prereq | `~/.codex/hooks.json` |
-| OpenClaw (v1.1) | Native hook API | Bash + MCP | OpenClaw config |
 
-**v1 is Claude-first.** Wedge (ii) — native-tool coverage — is confirmed on Claude Code via [the hooks reference](https://code.claude.com/docs/en/hooks). Codex and OpenClaw integration ships at v1.1 only after the wedge is proven on the primary host via B-series benchmark data. CHANGELOG for v1 makes the Claude-only scope explicit.
+**v1 is Claude-first.** Wedge (ii) — native-tool coverage — is confirmed on Claude Code via [the hooks reference](https://code.claude.com/docs/en/hooks). Codex integration ships at v1.1 only after the wedge is proven on the primary host via B-series benchmark data. CHANGELOG for v1 makes the Claude-only scope explicit.
 
 ### Config surface
 
@@ -443,7 +442,7 @@ compact/
     ├── unit/
     ├── golden/
     ├── fuzz/                  # P-series — v1 gate subset only (P1/P3/P6/P8/P15/P18/P26/P28/P30)
-    ├── cross-host/            # v1: claude-code.test.ts only; codex/openclaw stub files
+    ├── cross-host/            # v1: claude-code.test.ts only; codex stub file
     ├── adversarial/           # R-series — grows with shipped bugs
     ├── benchmark/             # B-series scenario fixtures + expected reduction ranges
     ├── fixtures/              # version-stamped golden inputs (toolVersion: frontmatter)
@@ -496,8 +495,7 @@ compact/test/
 │   └── pathological.test.ts   # P-series
 ├── cross-host/
 │   ├── claude-code.test.ts
-│   ├── codex.test.ts
-│   └── openclaw.test.ts
+│   └── codex.test.ts
 ├── adversarial/
 │   └── regression.test.ts     # R-series; past bugs that must never recur
 ├── fixtures/
@@ -578,12 +576,12 @@ Run each scenario on each supported host. Same input, same expected output. If a
 
 | ID | Scenario | Hosts |
 |----|----------|-------|
-| CH1 | Install hook via `gstack compact install <host>` | Claude Code, Codex, OpenClaw |
+| CH1 | Install hook via `gstack compact install <host>` | Claude Code, Codex |
 | CH2 | Uninstall hook is idempotent | All |
 | CH3 | Re-install doesn't duplicate entries | All |
 | CH4 | Hook co-exists with user's other PostToolUse hooks | All |
 | CH5 | Hook fires on Bash tool | All |
-| CH6 | Hook fires on Read tool | Claude Code (confirmed); Codex/OpenClaw verify-then-require |
+| CH6 | Hook fires on Read tool | Claude Code (confirmed); Codex verify-then-require |
 | CH7 | Hook fires on Grep tool | Same as CH6 |
 | CH8 | Hook fires on Glob tool | Same as CH6 |
 | CH9 | Hook fires on MCP tool (`mcp__*` matcher) | Claude Code; verify on others |
@@ -752,13 +750,13 @@ Concrete patterns borrowed from the competitive landscape:
 
 ### Original rollout (preserved for un-tabling)
 
-Each tier blocks on the prior passing all gate-tier tests. Claude-first — Codex and OpenClaw land at v1.1 after the wedge is proven on the primary host.
+Each tier blocks on the prior passing all gate-tier tests. Claude-first — Codex land at v1.1 after the wedge is proven on the primary host.
 
 1. **v0.0 (1 day):** rule engine + 4 primitives + line-oriented streaming pipeline + deep-merge + bundle compiler + envelope contract + golden tests for `tests/*` family only. No host integration yet. Measure savings on offline fixtures.
 2. **v0.1 (1 day):** Claude Code hook integration + `gstack compact install` + mtime-based auto-reload. Ship as opt-in; off by default. Ask 10 gstack power users to try it; collect feedback.
 3. **v0.5 (1 day):** B-series benchmark testbench (`compact/benchmark/`). Ship `gstack compact benchmark` so users can measure on their own data. Collect anonymous-from-the-start (nothing uploaded) reduction numbers from dogfooders.
 4. **v1.0 (1 day):** verifier layer with `failureCompaction` trigger on by default + exact-line-match sanitization + layered exitCode/pattern fallback + expanded tee redaction set. **Hard ship gate:** B-series on the author's 30-day local corpus shows ≥15% total reduction AND zero critical-line loss on planted bugs. Publish CHANGELOG entry leading with wedge framing (Claude Code only at v1).
-5. **v1.1 (+1 day):** Codex + OpenClaw hook integration. Cross-host E2E suite green. Build/lint/log rule families land with `gstack compact discover`-derived priorities.
+5. **v1.1 (+1 day):** Codex hook integration. Cross-host E2E suite green. Build/lint/log rule families land with `gstack compact discover`-derived priorities.
 6. **v1.2+:** expand rule families, community rule contribution workflow, community-corpus benchmark (hand-authored public fixtures, separate from local B-series).
 
 ## Risk analysis
@@ -778,19 +776,18 @@ Each tier blocks on the prior passing all gate-tier tests. Claude-first — Code
 ## Open questions
 
 1. ~~Does Codex's PostToolUse hook support matchers for Read/Grep/Glob?~~ (Deferred to v1.1 — Claude-first at v1.)
-2. ~~Does OpenClaw's hook API support PostToolUse specifically?~~ (Deferred to v1.1.)
-3. Should the verifier model be pinned, or version-tracked like gstack's other AI calls? (Inclined to pin `claude-haiku-4-5-20251001` and bump explicitly in CHANGELOG.)
-4. ~~Built-in secret-redaction regex set for tee files~~ **(resolved: expanded set — AWS/GitHub/GitLab/Slack/JWT/bearer/SSH-private-key. See decision #10.)**
-5. Should `gstack compact discover` propose auto-generated rules via Haiku? (Deferred to v2; skill-creep risk.)
-6. **New:** Does Claude Code's PostToolUse envelope include `exitCode`? (Still needs empirical verification per pre-implementation task #1; system now has a layered fallback regardless.)
-7. **New:** What's the right scenario-count cap for B-series? Cluster.ts can produce 5-50 scenarios depending on heavy-tail shape. Plan: cap at top 20 clusters by aggregate output volume.
+2. Should the verifier model be pinned, or version-tracked like gstack's other AI calls? (Inclined to pin `claude-haiku-4-5-20251001` and bump explicitly in CHANGELOG.)
+3. ~~Built-in secret-redaction regex set for tee files~~ **(resolved: expanded set — AWS/GitHub/GitLab/Slack/JWT/bearer/SSH-private-key. See decision #10.)**
+4. Should `gstack compact discover` propose auto-generated rules via Haiku? (Deferred to v2; skill-creep risk.)
+5. **New:** Does Claude Code's PostToolUse envelope include `exitCode`? (Still needs empirical verification per pre-implementation task #1; system now has a layered fallback regardless.)
+6. **New:** What's the right scenario-count cap for B-series? Cluster.ts can produce 5-50 scenarios depending on heavy-tail shape. Plan: cap at top 20 clusters by aggregate output volume.
 
 ## Pre-implementation assignment (must complete before coding)
 
 1. **Verify Claude Code's PostToolUse envelope contents empirically.** Ship a no-op hook; confirm `exitCode`, `command`, `argv`, `combinedText` are all present. This is the pivot for wedge (ii) native-tool coverage AND for the failureCompaction trigger. Output: `docs/designs/GCOMPACTION_envelope.md` with real captured envelopes for Bash + Read + Grep + Glob.
 2. **Read RTK's rule definitions** (`ARCHITECTURE.md`, `src/rules/`) and write a 1-paragraph summary of which of the 4 primitives they handle best. Inform our v1 rule set. This is the Search Before Building layer.
 3. **Port analyze_transcripts JSONL parser to TypeScript.** `compact/benchmark/src/scanner.ts`. Write a quick-look output that lists the top-50 noisiest tool calls on the author's `~/.claude/projects/`. Confirms the testbench premise before we build the replay loop. This is the B-series foundation.
-4. **Write the CHANGELOG entry FIRST.** Target sentence: *"Every tool in your agent's toolbox on Claude Code now produces less noise — test runners, git diffs, package installs — with an intelligent Haiku safety net that restores critical stack frames when our rules over-compact, and a local benchmark that proves the savings on your actual 30 days of coding sessions. Codex + OpenClaw land in v1.1."* If we cannot write that sentence honestly, the wedge isn't there yet.
+4. **Write the CHANGELOG entry FIRST.** Target sentence: *"Every tool in your agent's toolbox on Claude Code now produces less noise — test runners, git diffs, package installs — with an intelligent Haiku safety net that restores critical stack frames when our rules over-compact, and a local benchmark that proves the savings on your actual 30 days of coding sessions. Codex land in v1.1."* If we cannot write that sentence honestly, the wedge isn't there yet.
 5. **Ship a rule-only v0** (no Haiku verifier, no benchmark). Measure real token savings with current gstack evals + early B-series prototype. If <10% on local corpus, the whole premise is weaker than claimed — iterate the rules before adding the verifier on top.
 
 ## License & attribution

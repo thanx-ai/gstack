@@ -1,7 +1,7 @@
 # Adding a New Host to gstack
 
 gstack uses a declarative host config system. Each supported AI coding agent
-(Claude, Codex, Factory, Kiro, OpenCode, Slate, Cursor, OpenClaw) is defined
+(Claude, Codex, Factory, Kiro, OpenCode, Slate, Cursor, Hermes, GBrain) is defined
 as a typed TypeScript config object. Adding a new host means creating one file
 and re-exporting it. Zero code changes to the generator, setup, or tooling.
 
@@ -16,7 +16,8 @@ hosts/
 ├── opencode.ts      # OpenCode
 ├── slate.ts         # Slate (Random Labs)
 ├── cursor.ts        # Cursor
-├── openclaw.ts      # OpenClaw (hybrid: config + adapter)
+├── hermes.ts        # Hermes
+├── gbrain.ts        # GBrain
 └── index.ts         # Registry: imports all, derives Host type
 ```
 
@@ -37,7 +38,6 @@ copy, and tests all read from these configs. None of them have per-host code.
 
 Copy an existing config as a starting point. `hosts/opencode.ts` is a good
 minimal example. `hosts/factory.ts` shows tool rewrites and conditional fields.
-`hosts/openclaw.ts` shows the adapter pattern for hosts with different tool models.
 
 Create `hosts/myhost.ts`:
 
@@ -97,11 +97,11 @@ import myhost from './myhost';
 
 // Add to ALL_HOST_CONFIGS array:
 export const ALL_HOST_CONFIGS: HostConfig[] = [
-  claude, codex, factory, kiro, opencode, slate, cursor, openclaw, myhost
+  claude, codex, factory, kiro, opencode, slate, cursor, hermes, gbrain, myhost
 ];
 
 // Add to re-exports:
-export { claude, codex, factory, kiro, opencode, slate, cursor, openclaw, myhost };
+export { claude, codex, factory, kiro, opencode, slate, cursor, hermes, gbrain, myhost };
 ```
 
 ### 3. Add to .gitignore
@@ -160,16 +160,6 @@ Key fields:
 | `suppressedResolvers` | Resolver functions that return empty for this host |
 | `coAuthorTrailer` | Git co-author string for commits |
 | `boundaryInstruction` | Anti-prompt-injection warning for cross-model invocations |
-| `adapter` | Path to adapter module for complex transformations |
-
-## Adapter pattern (for hosts with different tool models)
-
-If string-replace tool rewrites aren't enough (the host has fundamentally
-different tool semantics), use the adapter pattern. See `hosts/openclaw.ts`
-and `scripts/host-adapters/openclaw-adapter.ts`.
-
-The adapter runs as a post-processing step after all generic rewrites. It
-exports `transform(content: string, config: HostConfig): string`.
 
 ## Validation
 

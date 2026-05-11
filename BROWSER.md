@@ -91,7 +91,7 @@ Three escalating modes:
   as "GStack Browser") with the Side Panel extension auto-loaded. You watch
   every command tick through in real time.
 - **Pair-agent over a tunnel**. Daemon binds a second listener that ngrok
-  forwards. A remote agent (Codex, OpenClaw, Hermes, anything that can speak
+  forwards. A remote agent (Codex, Hermes, anything that can speak
   HTTP) drives your local browser through a 26-command allowlist with a
   scoped, single-use token.
 
@@ -673,7 +673,7 @@ extension → enter the port from `$B status`.
 
 ## Pair-agent
 
-Remote AI agents (Codex, OpenClaw, Hermes, anything that speaks HTTP) can
+Remote AI agents (Codex, Hermes, anything that speaks HTTP) can
 drive your local browser through an ngrok tunnel. The whole flow is gated
 by a 26-command allowlist, scoped tokens, and a denial log.
 
