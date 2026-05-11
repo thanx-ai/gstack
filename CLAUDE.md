@@ -197,8 +197,14 @@ gstack/
 SKILL.md files are **generated** from `.tmpl` templates. To update docs:
 
 1. Edit the `.tmpl` file (e.g. `SKILL.md.tmpl` or `browse/SKILL.md.tmpl`)
-2. Run `bun run gen:skill-docs` (or `bun run build` which does it automatically)
-3. Commit both the `.tmpl` and generated `.md` files
+2. Run `bun run gen:skill-docs --host all` (or `bun run build` which does it
+   automatically). The bare `bun run gen:skill-docs` defaults to `--host claude`
+   only, which leaves the non-Claude host outputs (`.kiro/`, `.opencode/`,
+   `.slate/`, `.cursor/`, `.openclaw/`, `.hermes/`, `.gbrain/`) stale; the
+   parameterized host smoke tests in `test/gen-skill-docs.test.ts` will fail.
+3. Commit both the `.tmpl` and generated `.md` files (the non-Claude host
+   outputs are gitignored, so only `SKILL.md` files at the repo root and under
+   `<skill>/` directories get committed).
 
 To add a new browse command: add it to `browse/src/commands.ts` and rebuild.
 To add a snapshot flag: add it to `SNAPSHOT_FLAGS` in `browse/src/snapshot.ts` and rebuild.
