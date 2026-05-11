@@ -735,13 +735,17 @@ export function extractGlobalFlags(rawArgs: string[], env: NodeJS.ProcessEnv): G
 async function handlePairAgent(state: ServerState, args: string[]): Promise<void> {
   const clientName = parseFlag(args, '--client') || `remote-${Date.now()}`;
   const domains = parseFlag(args, '--domain')?.split(',').map(d => d.trim());
-  const control = hasFlag(args, '--control') || hasFlag(args, '--admin');
+  const admin = hasFlag(args, '--admin');
+  const control = hasFlag(args, '--control');
   const restrict = parseFlag(args, '--restrict');
   const localHost = parseFlag(args, '--local');
 
-  // Call POST /pair to create a setup key
-  // Default: full access (read+write+admin+meta). --control adds browser-wide ops.
-  // --restrict limits: --restrict read (read-only), --restrict "read,write" (no admin)
+  // Call POST /pair to create a setup key. Server-side scope resolution
+  // (browse/src/server.ts) picks the scope set based on flags:
+  //   default (no flags) → ['read', 'write']
+  //   --admin            → ['read', 'write', 'admin', 'meta'] (JS eval, cookies)
+  //   --control          → adds 'control' (stop/restart/disconnect ops)
+  //   --restrict X,Y     → explicit set, but only when --admin/--control absent.
   const pairResp = await fetch(`http://127.0.0.1:${state.port}/pair`, {
     method: 'POST',
     headers: {
@@ -751,6 +755,7 @@ async function handlePairAgent(state: ServerState, args: string[]): Promise<void
     body: JSON.stringify({
       domains,
       clientId: clientName,
+      admin,
       control,
       ...(restrict ? { scopes: restrict.split(',').map(s => s.trim()) } : {}),
     }),

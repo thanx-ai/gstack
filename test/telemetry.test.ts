@@ -388,12 +388,15 @@ describe('gstack-community-dashboard (Thanx fork)', () => {
     expect(output).toContain('gstack-analytics');
   });
 
-  test('remains unconfigured in the Thanx fork (no supabase/ directory)', () => {
-    // The Thanx fork deletes supabase/config.sh so the dashboard always
-    // fails-closed without curl-ing the upstream Supabase host. This test
-    // guards against accidental re-introduction of the public Supabase URL.
-    const output = run(`${BIN}/gstack-community-dashboard`);
-    expect(output).toContain('Supabase not configured');
+  test('refuses on Thanx fork even when GSTACK_SUPABASE_URL is set', () => {
+    // The Thanx fork deletes supabase/config.sh AND gates the dashboard
+    // on bin/gstack-thanx-fork-check, so even an env-var override can't
+    // make it POST to the upstream Supabase host.
+    const output = run(`${BIN}/gstack-community-dashboard`, {
+      GSTACK_SUPABASE_URL: 'https://frugpmstpnojnhfyimgv.supabase.co',
+      GSTACK_SUPABASE_ANON_KEY: 'sb_publishable_should_not_be_used',
+    });
+    expect(output).toContain('Disabled in the Thanx fork');
     expect(output).not.toContain('frugpmstpnojnhfyimgv.supabase.co');
   });
 });
