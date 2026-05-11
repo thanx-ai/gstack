@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "mcp__plugin_cortex_keystone__circleci_job_logs",
+      "mcp__plugin_cortex_keystone__datadog_logs",
+      "mcp__plugin_cortex_keystone__circleci_workflow_status",
+      "mcp__plugin_cortex_keystone__sentry_issues",
+      "mcp__plugin_cortex_keystone__circleci_pipelines",
+      "mcp__plugin_cortex_keystone__datadog_spans",
+      "mcp__argus__kb_search",
+      "mcp__plugin_cortex_keystone__circleci_test_results",
+      "mcp__keystone__ecs_task_logs",
+      "mcp__keystone__datadog_logs",
+      "mcp__keystone__replica_query"
+    ]
+  }
+}
