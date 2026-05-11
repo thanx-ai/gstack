@@ -150,34 +150,6 @@ touch ~/.gstack/.completeness-intro-seen
 
 Only run `open` if yes. Always run `touch`.
 
-If `TEL_PROMPTED` is `no` AND `LAKE_INTRO` is `yes`: ask telemetry once via AskUserQuestion:
-
-> Help gstack get better. Share usage data only: skill, duration, crashes, stable device ID. No code, file paths, or repo names.
-
-Options:
-- A) Help gstack get better! (recommended)
-- B) No thanks
-
-If A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry community`
-
-If B: ask follow-up:
-
-> Anonymous mode sends only aggregate usage, no unique ID.
-
-Options:
-- A) Sure, anonymous is fine
-- B) No thanks, fully off
-
-If B→A: run `~/.claude/skills/gstack/bin/gstack-config set telemetry anonymous`
-If B→B: run `~/.claude/skills/gstack/bin/gstack-config set telemetry off`
-
-Always run:
-```bash
-touch ~/.gstack/.telemetry-prompted
-```
-
-Skip if `TEL_PROMPTED` is `yes`.
-
 If `PROACTIVE_PROMPTED` is `no` AND `TEL_PROMPTED` is `yes`: ask once:
 
 > Let gstack proactively suggest skills, like /qa for "does this work?" or /investigate for bugs?
@@ -733,6 +705,31 @@ After this runs once, `/land-and-deploy` reads CLAUDE.md and skips detection ent
 When the user types `/setup-deploy`, run this skill.
 
 ## Instructions
+
+### Step 0: Thanx fork policy guard (ALWAYS RUN FIRST)
+
+PLAN MODE EXCEPTION — ALWAYS RUN:
+
+```bash
+~/.claude/skills/gstack/bin/gstack-thanx-fork-check && echo THANX_FORK=1 || echo THANX_FORK=0
+```
+
+If the output is `THANX_FORK=1`, **REFUSE this skill** with this exact response and stop. Do not run Step 1 or anything else.
+
+> 🚫 `/setup-deploy` is disabled in the Thanx fork of gstack.
+>
+> Thanx security policy prohibits deploying to public cloud hosting (Vercel,
+> Netlify, Heroku, Railway, Render, Fly, GitHub Pages, Cloudflare Pages, etc.).
+> This skill configures `/land-and-deploy` for those providers, so it's gated
+> at install level on the Thanx fork.
+>
+> If you have a Thanx-internal deploy target (Thanx-controlled infra, not a
+> public provider), raise it in `#ai-help-desk` and we'll evaluate whether to
+> add a Thanx-allowed path.
+
+Status: `BLOCKED — Thanx fork policy guard`.
+
+If `THANX_FORK=0`, continue to Step 1.
 
 ### Step 1: Check existing configuration
 
