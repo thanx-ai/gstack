@@ -2941,10 +2941,10 @@ describe('plan-mode-info resolver (handshake-replacement)', () => {
   });
 
   test('vestigial handshake is absent from non-Claude host outputs when present on disk', () => {
-    // Non-Claude hosts render to hostSubdirs (.agents/, .openclaw/, etc). The
+    // Non-Claude hosts render to hostSubdirs (.agents/, .opencode/, etc). The
     // plan-mode-info resolver has no host-scoping — all hosts get the new
     // section, none get the old handshake. Scan all candidate host dirs.
-    const hostDirs = ['.agents', '.openclaw', '.opencode', '.factory', '.hermes', '.kiro', '.cursor', '.slate'];
+    const hostDirs = ['.agents', '.opencode', '.factory', '.hermes', '.kiro', '.cursor', '.slate'];
     let checked = 0;
     for (const host of hostDirs) {
       const skillsRoot = path.join(ROOT, host, 'skills');
