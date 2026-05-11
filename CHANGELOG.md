@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.32.0.0] - 2026-05-11
+
+## **OpenClaw drops out of the Thanx fork.**
+## **Host registry, ClawHub native skills, dispatch docs, and the spawned-session signal are all gone.**
+
+The Thanx fork stops shipping OpenClaw support. `hosts/openclaw.ts` and the host-adapter module are deleted, the four `gstack-openclaw-*` ClawHub native skills under `openclaw/skills/` are removed, `docs/OPENCLAW.md` and the README's OpenClaw sections are stripped, and the `pair-agent` skill no longer offers an OpenClaw option. The `OPENCLAW_SESSION` env-var trigger that gated the `SPAWNED_SESSION` preamble check is removed too — with no producer in the fork, the receiver became dead code. Already-published `gstack-openclaw-*` skills on ClawHub are untouched; this fork just stops pushing updates to them.
+
+### The numbers that matter
+
+| Surface | Before | After | Δ |
+|---|---|---|---|
+| Supported hosts | 10 | 9 | -1 |
+| Host config + adapter files | `hosts/openclaw.ts`, `scripts/host-adapters/openclaw-adapter.ts` | (deleted) | -2 |
+| Published ClawHub skill dirs under `openclaw/skills/` | 4 | 0 | -4 |
+| Preamble resolvers | `generateSpawnedSessionCheck` + `OPENCLAW_SESSION` echo | (deleted) | -2 |
+| Files touched | — | 80 | net -1958 lines |
+
+The dead `staticFiles` and `adapter` fields on `HostConfig` go away too — OpenClaw was the only consumer.
+
+### What this means for Thanx engineers
+
+If you were not using `--host openclaw` (and you weren't — nobody at Thanx runs OpenClaw against this fork), nothing changes. `pair-agent` still pairs Codex, Cursor, Hermes, and the generic HTTP path; the dropped OpenClaw "same-machine" shortcut is the only callable that's gone. The 9 remaining hosts (Claude, Codex, Factory, Kiro, OpenCode, Slate, Cursor, Hermes, GBrain) are unchanged. If you ever need OpenClaw back, restore the host config from git history — the deletion is one config file plus its registry entry.
+
+### Itemized changes
+
+#### Removed
+- `hosts/openclaw.ts` and the registry entries in `hosts/index.ts`.
+- `scripts/host-adapters/openclaw-adapter.ts` (entire `scripts/host-adapters/` directory — OpenClaw was the only adapter).
+- `openclaw/` directory: `gstack-openclaw-{office-hours,ceo-review,investigate,retro}/SKILL.md`, `gstack-{lite,full,plan}-CLAUDE.md` prompt templates, and `agents-gstack-section.md`.
+- `docs/OPENCLAW.md`, the README's "OpenClaw" and "Native OpenClaw Skills (via ClawHub)" sections, the "Publishing native OpenClaw skills to ClawHub" section from `CLAUDE.md`.
+- `test/openclaw-native-skills.test.ts` and the openclaw-specific assertions in `test/host-config.test.ts`.
+- `scripts/resolvers/preamble/generate-spawned-session-check.ts` and the `OPENCLAW_SESSION` env-var echo in `generate-preamble-bash.ts`. With OpenClaw gone, no caller sets the var; the receiver was dead code.
+- Dead `staticFiles` and `adapter` fields on `HostConfig` — OpenClaw was the only consumer.
+
+#### Changed
+- `pair-agent/SKILL.md.tmpl`: dropped OpenClaw option, AlphaClaw platform note, and `~/.openclaw/...` credential paths. `autoplan/SKILL.md.tmpl` and `setup-gbrain/SKILL.md.tmpl`: removed OpenClaw scope-detection keywords and audience callouts.
+- `docs/REMOTE_BROWSER_ACCESS.md`, `docs/ADDING_A_HOST.md`, `docs/designs/GCOMPACTION.md`, `BROWSER.md`, `AGENTS.md`, `CONTRIBUTING.md`, `docs/skills.md`: OpenClaw removed from host lists, architecture diagrams, and roadmap discussion.
+- Golden test fixtures (`test/fixtures/golden/*-ship-SKILL.md`) regenerated to match the new preamble output.
+
 ## [1.31.1.0] - 2026-05-10
 
 ## **Three small community fixes land cleanly.**
