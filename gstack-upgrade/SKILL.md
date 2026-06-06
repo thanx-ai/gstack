@@ -1,13 +1,7 @@
 ---
 name: gstack-upgrade
 version: 2.0.0
-description: |
-  Pull the latest reviewed gstack release from origin (thanx-ai/gstack) and
-  re-run setup. This is the Thanx fork: there is no remote VERSION poll, no
-  auto-upgrade, no SessionStart hook. To merge changes from upstream
-  garrytan/gstack, use /upstream-sync instead — it does an explicit
-  file-by-file security review.
-  Voice triggers (speech-to-text aliases): "upgrade the tools", "update the tools", "gee stack upgrade", "g stack upgrade".
+description: Pull the latest reviewed gstack release from origin (thanx-ai/gstack) and re-run setup.
 triggers:
   - upgrade gstack
   - update gstack version
@@ -20,6 +14,16 @@ allowed-tools:
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
+
+
+## When to invoke this skill
+
+This is the Thanx fork: there is no remote VERSION poll, no
+auto-upgrade, no SessionStart hook. To merge changes from upstream
+garrytan/gstack, use /upstream-sync instead — it does an explicit
+file-by-file security review.
+
+Voice triggers (speech-to-text aliases): "upgrade the tools", "update the tools", "gee stack upgrade", "g stack upgrade".
 
 # /gstack-upgrade
 

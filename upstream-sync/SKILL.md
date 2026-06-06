@@ -1,14 +1,7 @@
 ---
 name: upstream-sync
 version: 1.0.0
-description: |
-  Pull changes from upstream garrytan/gstack into the Thanx fork with an
-  explicit, file-by-file security review of every commit. Refuses to merge
-  without your sign-off. Defends against supply-chain attacks: malicious
-  hooks, hidden network calls, MCP server registration, exfil through
-  telemetry, etc. Use when asked to "sync upstream", "pull from garrytan",
-  "merge upstream gstack", or "review upstream changes". (gstack)
-  Voice triggers (speech-to-text aliases): "sync upstream", "pull from upstream", "merge upstream gstack", "review upstream changes".
+description: Pull changes from upstream garrytan/gstack into the Thanx fork with an explicit, file-by-file security review of every commit. (gstack)
 triggers:
   - sync upstream gstack
   - pull from garrytan gstack
@@ -26,6 +19,17 @@ allowed-tools:
 ---
 <!-- AUTO-GENERATED from SKILL.md.tmpl — do not edit directly -->
 <!-- Regenerate: bun run gen:skill-docs -->
+
+
+## When to invoke this skill
+
+Refuses to merge
+without your sign-off. Defends against supply-chain attacks: malicious
+hooks, hidden network calls, MCP server registration, exfil through
+telemetry, etc. Use when asked to "sync upstream", "pull from garrytan",
+"merge upstream gstack", or "review upstream changes".
+
+Voice triggers (speech-to-text aliases): "sync upstream", "pull from upstream", "merge upstream gstack", "review upstream changes".
 
 # /upstream-sync — pull from upstream with a security review
 
