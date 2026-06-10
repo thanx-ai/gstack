@@ -49,6 +49,7 @@ You can now use gbrain, the iOS QA skills, `/spec`, and the redaction guard with
 
 #### For contributors
 - Full per-commit review recorded in `UPSTREAM_SYNC_LOG.md`.
+- **CI trimmed for the fork.** All workflows moved off the upstream `ubicloud-standard-8` self-hosted runners onto GitHub-hosted `ubuntu-latest`. The paid E2E eval suite (`E2E Evals`) and the Ubicloud Docker-image build (`Build CI Image`) are now `workflow_dispatch`-only — they no longer gate PRs. The per-PR gate is the free set: gen-skill-docs freshness, actionlint, version-gate, PR-title-sync, make-pdf, and the Windows checks.
 - Upstream's v1→v2 catalog token-budget work landed; the reference numbers live in `test/fixtures/parity-baseline-v1.44.1.json` and are guarded by `test/parity-baseline-integrity.test.ts`.
 - Two upstream test files that asserted the removed exfiltration code were dropped (`telemetry-repo-strip.test.ts` checked `gstack-telemetry-sync`'s repo-identity sed pipeline; `regression-pr1169-mktemp-fallbacks.test.ts` checked `gstack-telemetry-sync` and the deleted `supabase/verify-rls.sh`). The fork's stub is still covered by `test/telemetry.test.ts` and `test/skill-validation.test.ts`.
 - Net-positive upstream hardening adopted as-is: `gstack-slug` cache shell-injection fix, `gstack-timeline-read` code-injection fix, `gstack-paths` cross-plugin state guard, and the schema-aware `gstack-settings-hook` rewrite (taken only with setup's SessionStart-add line confirmed stripped).
