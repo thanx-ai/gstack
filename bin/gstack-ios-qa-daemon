@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# gstack-ios-qa-daemon — Mac-side daemon that brokers tailnet/loopback traffic
+# to a connected iPhone running the in-app StateServer over the CoreDevice USB
+# tunnel. Single-instance via flock on ~/.gstack/ios-qa-daemon.pid.
+#
+# Usage:
+#   gstack-ios-qa-daemon                         # loopback-only (local USB)
+#   gstack-ios-qa-daemon --tailnet               # additionally open tailnet listener
+#
+# Environment:
+#   GSTACK_IOS_DAEMON_PORT       — loopback listener port (default 9099)
+#   GSTACK_IOS_TARGET_UDID       — target iOS device UDID (optional; otherwise
+#                                  the first paired connected device is used)
+#   GSTACK_IOS_TARGET_BUNDLE_ID  — bundle ID of the iOS app hosting StateServer
+#                                  (default com.gstack.iosqa.fixture)
+#
+# Readiness protocol: prints `READY: port=<n> pid=<pid>` to stdout once both
+# listeners are bound. Spawners read stdin with a ~5s timeout to confirm.
+#
+# Exits cleanly when no active loopback clients are connected AND no remote
+# session tokens are outstanding.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GSTACK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ENTRY="$GSTACK_DIR/ios-qa/daemon/src/index.ts"
+
+if [ ! -f "$ENTRY" ]; then
+  echo "gstack-ios-qa-daemon: missing $ENTRY (gstack install incomplete?)" >&2
+  exit 1
+fi
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "gstack-ios-qa-daemon: bun runtime not on PATH — install from https://bun.sh" >&2
+  exit 1
+fi
+
+# ─── Thanx fork policy guard (tailnet path only) ────────────────────────────
+# The --tailnet flag opens a remote-reachable listener that brokers device
+# control to other agents over a Tailscale tailnet. That is the "expose a local
+# service to a remote agent over an overlay network" surface Thanx policy
+# forbids outside Thanx. Loopback / local-USB mode is unaffected. A Thanx
+# engineer with a legit internal use case can override via GSTACK_THANX_FORK=0
+# (route through #ai-help-desk first).
+for _arg in "$@"; do
+  if [ "$_arg" = "--tailnet" ]; then
+    if [ -x "$GSTACK_DIR/bin/gstack-thanx-fork-check" ] && "$GSTACK_DIR/bin/gstack-thanx-fork-check"; then
+      echo "gstack-ios-qa-daemon: --tailnet is disabled on Thanx-fork installs (policy: no remote-access tunnels outside Thanx)." >&2
+      echo "Local USB QA works without --tailnet. For a legit internal use case, route through #ai-help-desk or set GSTACK_THANX_FORK=0." >&2
+      exit 1
+    fi
+    # Defense-in-depth: the daemon documents "never 0.0.0.0" but does not
+    # enforce it. Refuse a wildcard tailnet bind so a misconfig can't expose
+    # device control to the whole LAN.
+    case "${GSTACK_IOS_TAILNET_BIND:-}" in
+      0.0.0.0|::|"[::]")
+        echo "gstack-ios-qa-daemon: refusing GSTACK_IOS_TAILNET_BIND=${GSTACK_IOS_TAILNET_BIND} (wildcard bind exposes device control beyond the tailnet)." >&2
+        exit 1
+        ;;
+    esac
+    break
+  fi
+done
+
+exec bun run "$ENTRY" "$@"

@@ -1,21 +1,13 @@
 name: Build CI Image
+# Thanx fork: this image was prebaked for the upstream Ubicloud eval runners.
+# The fork doesn't run the paid evals on PRs, so this is manual-only — build it
+# only if a maintainer is intentionally running the full E2E eval suite.
 on:
-  # Rebuild weekly (Monday 6am UTC) to pick up CLI updates
-  schedule:
-    - cron: '0 6 * * 1'
-  # Rebuild on Dockerfile or lockfile changes
-  push:
-    branches: [main]
-    paths:
-      - '.github/docker/Dockerfile.ci'
-      - 'package.json'
-      - 'bun.lock'
-  # Manual trigger
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubicloud-standard-2
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write

@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.57.0.0] - 2026-06-05
+
+## **Two dozen upstream releases land in the Thanx fork, audited line by line.**
+## **Every feature from garrytan/gstack v1.33 through v1.56 arrives with the fork's exfiltration guards still bolted shut.**
+
+This is a reviewed upstream sync. The fork was pinned at upstream v1.32; this pulls in everything through v1.56 and re-applies the Thanx hardening on top. You get the big upstream features: gbrain (a remote MCP "brain" plus local PGLite code search), the iOS live-device QA farm, the `/spec` authoring skill, a smarter redaction guard that scans for PII, secrets, and legal text across `/spec`, `/ship`, `/cso`, and the document skills, and a round of token-reduction work that makes the heavy skills load less on every run. None of it ships telemetry off your machine. The public-Supabase exfiltration path upstream still carries stays stubbed, deleted, and gated in this fork, and the one new remote-access surface (iOS over Tailscale) is gated off on Thanx installs.
+
+### The sync numbers that matter
+
+Reproduce with `git fetch upstream && git diff 49cc4ff..upstream/main --shortstat`. The audit ran as six parallel reviewers against the supply-chain checklist in `/upstream-sync`.
+
+| Metric | Value |
+|---|---|
+| Upstream commits reviewed | 40 |
+| Files changed in the delta | 583 |
+| Lines added / removed | +86,015 / -15,515 |
+| New npm dependencies | 0 (`bun.lock` unchanged) |
+| Exfiltration re-arming attempts blocked | 6 |
+| New remote-access surfaces gated | 1 (iOS `--tailnet`) |
+
+The most striking number is the zero. Twenty-four upstream releases moved 86K lines and did not add a single new dependency or install hook, so the only real supply-chain risk was upstream re-arming the telemetry and auto-update paths this fork removed. Those re-arming attempts were caught and reverted to the fork's stubs.
+
+### What this means for Thanx engineers
+
+You can now use gbrain, the iOS QA skills, `/spec`, and the redaction guard without giving up the fork's posture. Telemetry stays off, there is no SessionStart auto-update hook, `gstack-update-check` is still a no-op, the `supabase/` config is still gone, and `/setup-deploy`, `/setup-gbrain`, and the remote-pairing path of `/pair-agent` still refuse on Thanx installs. Update with `/gstack-upgrade`. If you need the iOS Tailscale path or a gbrain Supabase project for a real internal use case, route through `#ai-help-desk`.
+
+### Itemized changes
+
+#### Added (from upstream v1.33 - v1.56)
+- **gbrain split-engine** (v1.37, v1.40, v1.52): remote MCP brain plus local PGLite for code search, brain-aware planning across 5 skills, and data-loss guards. All database traffic goes to a user-provisioned Supabase via the local `gbrain` CLI; the setup skill refuses on Thanx-fork installs.
+- **iOS live-device QA farm** (v1.43): `/ios-qa`, `/ios-fix`, `/ios-design-review`, `/ios-clean`, `/ios-sync`, a Mac daemon, and typed Swift accessor codegen. Local USB CoreDevice driving works normally; the optional `--tailnet` remote-exposure path is gated off on Thanx installs.
+- **`/spec`** (v1.47): author a backlog-ready spec in 5 phases with optional agent spawn.
+- **Smarter redaction guard** (v1.53): a local PII / secrets / legal scanner (`gstack-redact`, `gstack-redact-prepush`) wired into `/spec`, `/ship`, `/cso`, and the document skills. Pure-local, no network.
+- **`/document-generate`** (v1.35) and an expanded `/document-release` with a Diataxis coverage map.
+- **Token-reduction work** (v1.46, v1.54, v1.56): heavy skills carve into on-demand sections so less loads on every invocation; an AskUserQuestion split rule and a paranoid AUQ safety net.
+- **Persistent design board daemon** (v1.45) and a **long-lived sidebar** (v1.44) with keepalive, restart, re-attach, and scrollback replay.
+- **Windows install hardening** (v1.38), a **Conductor `GSTACK_*` env-shim** (v1.39.2), and CI moved onto larger Ubicloud runners with a Windows setup E2E gate.
+
+#### Security: Thanx fork posture preserved across the sync
+- `bin/gstack-telemetry-sync` stays a stub; upstream's live POST to `frugpmstpnojnhfyimgv.supabase.co` was not taken.
+- `scripts/resolvers/preamble/generate-telemetry-prompt.ts` still returns `''`; the opt-in prompt was not restored.
+- The `supabase/` directory stays deleted; the re-added `supabase/verify-rls.sh` was removed.
+- `bin/gstack-update-check` and `bin/gstack-session-update` stay stubs; the `raw.githubusercontent.com` VERSION poll and the SessionStart auto-`git pull` hook were not restored. `setup` keeps `auto_upgrade false`.
+- The Step-0 `gstack-thanx-fork-check` guards in `/setup-deploy`, `/setup-gbrain`, and `/pair-agent` (remote path) survived the regen.
+- The iOS `--tailnet` listener is gated behind `gstack-thanx-fork-check`, and the bind is validated to reject `0.0.0.0` / `::`.
+- gbrain memory ingest keeps unconditional fail-closed secret scanning rather than upstream's opt-in scan.
+
+#### For contributors
+- Full per-commit review recorded in `UPSTREAM_SYNC_LOG.md`.
+- **CI trimmed for the fork.** All workflows moved off the upstream `ubicloud-standard-8` self-hosted runners onto GitHub-hosted `ubuntu-latest`. The paid E2E eval suite (`E2E Evals`) and the Ubicloud Docker-image build (`Build CI Image`) are now `workflow_dispatch`-only — they no longer gate PRs. The per-PR gate is the free set: gen-skill-docs freshness, actionlint, version-gate, PR-title-sync, make-pdf, and the Windows checks.
+- Upstream's v1→v2 catalog token-budget work landed; the reference numbers live in `test/fixtures/parity-baseline-v1.44.1.json` and are guarded by `test/parity-baseline-integrity.test.ts`.
+- Two upstream test files that asserted the removed exfiltration code were dropped (`telemetry-repo-strip.test.ts` checked `gstack-telemetry-sync`'s repo-identity sed pipeline; `regression-pr1169-mktemp-fallbacks.test.ts` checked `gstack-telemetry-sync` and the deleted `supabase/verify-rls.sh`). The fork's stub is still covered by `test/telemetry.test.ts` and `test/skill-validation.test.ts`.
+- Net-positive upstream hardening adopted as-is: `gstack-slug` cache shell-injection fix, `gstack-timeline-read` code-injection fix, `gstack-paths` cross-plugin state guard, and the schema-aware `gstack-settings-hook` rewrite (taken only with setup's SessionStart-add line confirmed stripped).
+
 ## [1.32.0.0] - 2026-05-11
 
 ## **OpenClaw drops out of the Thanx fork.**
