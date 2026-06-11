@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.57.1.0] - 2026-06-11
+
+## **The upstream-sync skill now teaches itself the lessons from the v1.56 sync.**
+## **Test-reconciliation and CI-runner rules baked into the checklist so the next sync doesn't relearn them.**
+
+`/upstream-sync` gains two guardrails distilled from the v1.32→v1.56 sync. First, a **test-reconciliation** section: `bun test` is expected to be red after a sync, and the skill now spells out why and what to do. Upstream ships tests that assert the telemetry/supabase exfil code this fork removed; the skill says delete them rather than re-arm the exfil, and register fork-only skills in upstream's test matrices. It adds a blame protocol: diff `bun test` against an `origin/main` baseline before attributing any failure to the sync, because a clean fork checkout is already red from missing toolchains (gbrain, swift, gitleaks, codex). Second, a **CI-runner rule** in the fork-specific checklist: flag any workflow change that reintroduces `ubicloud-standard-8` runners or makes the paid eval / Docker-image-build workflows gate PRs again.
+
+### What this means for the next sync
+
+You stop rediscovering the same two traps. The skill tells you the red test suite is normal, which failures are yours, and that the merge should use `--merge` (not squash) so the fork's `main` keeps upstream history and the next merge-base only reviews genuinely-new commits.
+
+### Itemized changes
+
+#### Changed
+- `upstream-sync/SKILL.md.tmpl` (and regenerated `SKILL.md`): added a "Test reconciliation" subsection to Step 8 and a CI-runner bullet to the fork-specific checklist (section I).
+
 ## [1.57.0.0] - 2026-06-05
 
 ## **Two dozen upstream releases land in the Thanx fork, audited line by line.**
