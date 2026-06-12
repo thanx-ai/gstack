@@ -316,6 +316,13 @@ as `BLOCK` until the user signs off.
 - Any change that swaps `origin` from `thanx-ai/gstack` to anything else.
 - Any change to `/upstream-sync` itself (this skill) that loosens the
   review steps.
+- Any change under `.github/workflows/` that reintroduces
+  `ubicloud-standard-8` runners (the fork has no self-hosted Ubicloud
+  fleet — those jobs queue forever and never gate), or that makes the
+  paid eval suite (`evals.yml` / "E2E Evals") or the Ubicloud Docker
+  build (`ci-image.yml` / "Build CI Image") gate PRs again. The fork
+  keeps those `workflow_dispatch`-only and runs everything else on
+  GitHub-hosted `ubuntu-latest`.
 
 ### Severity rules
 
@@ -390,9 +397,42 @@ time instead of merging the whole range. Stop on conflicts and ask the
 user how to resolve.
 
 After the merge or cherry-pick, run `bun install` (in case dependencies
-moved) and `bun test`. If tests fail, **stop** — do not push, do not
-open a PR. Surface the failures and let the user decide whether to
-fix-on-this-branch or abort the sync.
+moved) and `bun test`.
+
+### Test reconciliation (expected on every sync)
+
+`bun test` will NOT be fully green after a sync, and that is expected — do
+not panic-revert. Two distinct classes of failure show up:
+
+1. **Upstream tests that assert the exfil code this fork removed.** Upstream
+   ships tests checking the live telemetry/update/supabase paths (e.g. a
+   `gstack-telemetry-sync` repo-identity sed test, a `supabase/verify-rls.sh`
+   mktemp test). They fail here because the fork deleted their subject.
+   **Delete these tests — do not make them green.** Making them pass would
+   require re-arming the exact exfil this fork exists to close. The stubs stay
+   covered by `test/telemetry.test.ts` and `test/skill-validation.test.ts`.
+   Record each deletion in the sync log.
+2. **Fork-only registration drift.** Fork-only skills/files need adding to
+   upstream's test registries: register `/upstream-sync` in
+   `test/skill-coverage-matrix.ts`; exempt the fork-rewritten (smaller)
+   `gstack-upgrade` in `test/skill-size-budget.test.ts`. Resolve generated
+   `SKILL.md` conflicts via `bun run gen:skill-docs --host all`, never by hand;
+   golden fixtures are exact copies of the regenerated host ship SKILL.md.
+
+**Blame protocol — diff against a baseline before attributing any failure to
+the sync.** A clean fork checkout's `bun test` is already red (~24 failures in
+a typical dev box: gbrain CLI, swift, gitleaks, codex toolchains absent). Run
+`bun test` on `origin/main` in a throwaway worktree, diff the failure sets, and
+only act on failures the sync actually introduced. In CI the GitHub-hosted
+`gate` check is the real signal.
+
+If failures remain that are NOT environment/upstream-inherited and NOT the two
+classes above, **stop** — do not push, do not open a PR. Surface them and let
+the user decide whether to fix-on-this-branch or abort the sync.
+
+Merge the sync PR with `--merge` (a merge commit), not squash, so the fork's
+`main` retains upstream's commit history. That keeps the merge-base correct so
+the next `/upstream-sync` only reviews genuinely-new upstream commits.
 
 ## Step 9: Log the sync
 
